@@ -529,7 +529,7 @@ int main()
 	glfwSetFramebufferSizeCallback(*renderer.getWindow(), framebufferResizeCallback);
 	glfwSetKeyCallback(*renderer.getWindow(), key_callback);
 
-
+	//test????
 	auto verticesCopy = mesh.m_vertices;
 	
 	std::cout << sizeof(glm::mat4) << std::endl;
