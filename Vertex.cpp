@@ -1,0 +1,41 @@
+#include "Vertex.h"
+
+
+VkVertexInputBindingDescription Vertex::getVertexBindingDesc()
+{
+	VkVertexInputBindingDescription desc = {};
+	desc.binding = 0;
+	desc.stride = sizeof(Vertex);
+	desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	return desc;
+
+}
+
+std::vector<VkVertexInputAttributeDescription> Vertex::getVertexAttriDesc()
+{
+	std::vector<VkVertexInputAttributeDescription> arr;
+	arr.resize(4);
+
+	arr[0].binding = 0;
+	arr[0].location = 0;
+	arr[0].offset = offsetof(Vertex, position);
+	arr[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+	arr[1].binding = 0;
+	arr[1].location = 1;
+	arr[1].offset = offsetof(Vertex, color);
+	arr[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+	arr[2].binding = 0;
+	arr[2].location = 2;
+	arr[2].offset = offsetof(Vertex, boneWeights);
+	arr[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+	arr[3].binding = 0;
+	arr[3].location = 3;
+	arr[3].offset = offsetof(Vertex, affectedBonesID);
+	arr[3].format = VK_FORMAT_R32G32B32A32_UINT;
+
+	return arr;
+}
+

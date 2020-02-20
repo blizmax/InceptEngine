@@ -1,48 +1,6 @@
 #include "Renderer.h"
 
 
-VkVertexInputBindingDescription Vertex::getVertexBindingDesc()
-{
-	VkVertexInputBindingDescription desc = {};
-	desc.binding = 0;
-	desc.stride = sizeof(Vertex);
-	desc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	return desc;
-
-}
-
-std::vector<VkVertexInputAttributeDescription> Vertex::getVertexAttriDesc()
-{
-	std::vector<VkVertexInputAttributeDescription> arr;
-	arr.resize(4);
-
-	arr[0].binding = 0;
-	arr[0].location = 0;
-	arr[0].offset = offsetof(Vertex, position);
-	arr[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-
-	arr[1].binding = 0;
-	arr[1].location = 1;
-	arr[1].offset = offsetof(Vertex, color);
-	arr[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-	
-	arr[2].binding = 0;
-	arr[2].location = 2;
-	arr[2].offset = offsetof(Vertex, boneWeights);
-	arr[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-
-	arr[3].binding = 0;
-	arr[3].location = 3;
-	arr[3].offset = offsetof(Vertex, affectedBonesID);
-	arr[3].format = VK_FORMAT_R32G32B32A32_UINT;
-	
-	return arr;
-}
-
-
-
-
-
 Renderer::Renderer()
 {
 	m_clearColor.float32[0] = 0.5f;
@@ -51,9 +9,11 @@ Renderer::Renderer()
 	m_clearColor.float32[3] = 1.0f;
 	m_clearValue.color = m_clearColor;
 
-	m_mvp.model = glm::rotate(glm::mat4(1.0f), glm::radians(180+30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));  //TODO
+	//m_mvp.model = glm::rotate(glm::mat4(1.0f), glm::radians(180+30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));  //TODO
 
-	m_mvp.view = glm::lookAt(glm::vec3(0, 200,-400), glm::vec3(0,100,0), glm::vec3(0,1,0));
+
+	m_mvp.model = glm::mat4(1.0);
+	m_mvp.view = glm::lookAt(glm::vec3(0, 0,-400), glm::vec3(0,0,0), glm::vec3(0,1,0));
 
 }
 
@@ -104,6 +64,7 @@ void Renderer::drawTriangle(const std::vector<glm::mat4>& boneT)
 
 	updateUniformBuffer(boneT);
 	
+
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submitInfo.pWaitDstStageMask = waitStages;
@@ -643,8 +604,8 @@ void Renderer::createGraphicsPipeline()
 	rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 	rasterizationStateCreateInfo.lineWidth = 1.0f;
 	//two-sided or single-sided of the material
-	rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
-	rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
 
 	VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };

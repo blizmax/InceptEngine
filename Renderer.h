@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RENDERER_H
+#define RENDERER_H
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -10,58 +11,24 @@
 #include <string>
 #include <unordered_map>
 #include <fstream>
-#define GLM_FORCE_RADIANS
-#define GLM_FORECE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
 #include <array>
-#include<glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
-#include <glm/gtx/quaternion.hpp>
 #include <chrono>
+
+#include "Math.h"
+#include "Vertex.h"
+
 
 #define GRAPHICS_QUEUE "graphicsQueue"
 #define PRESENT_QUEUE "presentQueue"
 
-const int MAX_BONE_PER_VERTEX = 4;
-const int MAX_BONE_PER_SKELETON = 200;
 
-struct Camera
+
+struct MVP
 {
-
-	glm::vec4 m_x = { 1,0,0,0 };
-	glm::vec4 m_y = { 0,1,0,0 };
-	glm::vec4 m_z = { 0,0,1,0 };
-	glm::vec4 m_pos = { 0,0,500,1 };
-
-
-
-	glm::mat4 getCameraFrame()
-	{
-		return glm::mat4(m_x, m_y, m_z, m_pos);
-	}
-
-	glm::mat4 getCameraMatrix()
-	{
-		return glm::inverse(getCameraFrame());
-	}
-
-	void rotateLocal(float degree, glm::vec3 axis)
-	{
-		glm::mat4  rotation = glm::rotate(glm::mat4(1.0), glm::radians(degree), axis);
-		m_x = rotation * m_x;
-		m_y = rotation * m_y;
-		m_z = rotation * m_z;
-	}
-
-	void translate(float distance, glm::vec3 direction)
-	{
-		glm::mat4 translate = glm::translate(glm::mat4(1.0), distance * direction);
-		m_pos = translate * m_pos;
-		std::cout << glm::to_string(m_pos) << std::endl;
-	}
-
+	glm::mat4 model;
+	glm::mat4 view;
+	glm::mat4 proj;
 };
-
 
 
 struct QueueFamilyIndices
@@ -75,23 +42,7 @@ struct QueueFamilyIndices
 	}
 };
 
-struct Vertex
-{
-	glm::vec4 position = glm::vec4(0);
-	glm::vec4 color = glm::vec4(0);
-	glm::vec4 boneWeights = { 0.0,0.0,0.0,0.0 };
-	glm::uvec4 affectedBonesID= { 0,0,0,0 };
 
-	static VkVertexInputBindingDescription getVertexBindingDesc();
-	static std::vector<VkVertexInputAttributeDescription> getVertexAttriDesc();
-};
-
-struct MVP
-{
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
-};
 
 
 class Renderer
@@ -147,6 +98,7 @@ public:
 		m_vertices = v;
 		m_indices = idx;
 	}
+
 
 	void init();
 private:
@@ -296,3 +248,4 @@ private:
 };
 
 
+#endif

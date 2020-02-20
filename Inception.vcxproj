@@ -91,7 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;C:\FBX SDK\2019.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>
@@ -100,8 +100,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;C:\FBX SDK\2019.0\lib\vs2015\x64\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4098 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -111,7 +111,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;C:\FBX SDK\2019.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>
@@ -120,8 +120,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;C:\FBX SDK\2019.0\lib\vs2015\x64\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4098 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -133,7 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;C:\FBX SDK\2019.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>
@@ -144,8 +144,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;C:\FBX SDK\2019.0\lib\vs2015\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4098 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -157,7 +157,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\include;C:\GraphicsLibraries\glm;C:\VulkanSDK\1.2.131.1\Include;C:\GraphicsLibraries\assimp-5.0.1\include;C:\FBX SDK\2019.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>
@@ -168,17 +168,36 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.131.1\Lib;C:\GraphicsLibraries\glfw-3.3.2.bin.WIN64\lib-vc2019;C:\GraphicsLibraries\assimp-5.0.1\lib;C:\FBX SDK\2019.0\lib\vs2015\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;vulkan-1.lib;assimp-vc142-mtd.lib;libfbxsdk.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4098 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="ActorComponent.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ChangeCooridinateSystem.cpp" />
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="SkeletonMesh.cpp" />
+    <ClCompile Include="Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Actor.h" />
+    <ClInclude Include="ActorComponent.h" />
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Collision.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Math.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Skeleton.h" />
+    <ClInclude Include="SkeletonMesh.h" />
+    <ClInclude Include="Utility.h" />
+    <ClInclude Include="Vertex.h" />
     <ClInclude Include="WindowEventCallback.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
