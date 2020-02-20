@@ -9,15 +9,6 @@
 #include <stack>
 #include <chrono>
 
-/*
-static inline glm::mat4 mat4_cast(const aiMatrix4x4& m) 
-{ 
-	glm::vec4 col1 = { m.a1, m.a2, m.a3, m.a4 };
-	glm::vec4 col2 = { m.b1, m.b2, m.b3, m.b4 };
-	glm::vec4 col3 = { m.c1, m.c2, m.c3, m.c4 };
-	glm::vec4 col4 = { m.d1, m.d2, m.d3, m.d4 };
-	return glm::transpose(glm::mat4(col1, col2, col3, col4)); 
-}*/
 
 glm::mat4 mat4_cast(const aiMatrix4x4& ai)
 {
@@ -494,15 +485,8 @@ std::vector<glm::mat4> getBonesTransformation(const Skeleton& skeleton, const An
 
 int main()
 {
-	float testtime = 1.0f;
-	
 	SkeletonMesh mesh = loadSkeletonMesh("D:\\Inception\\Content\\Models\\SK_Hornet.FBX", "root");
 
-
-	std::cout << "Load " << mesh.m_vertices.size() << " vertices" << std::endl;
-	std::cout << "Load " << mesh.m_indices.size() << " indices" << std::endl;
-	
-	
 	Animation anim = loadAnimation("D:\\Inception\\Content\\Models\\HornetNormalAttackOne.FBX", mesh, "root");
 
 	std::cout << "load finish" << std::endl;
@@ -513,8 +497,8 @@ int main()
 	renderer.init();
 
 
-
 	auto m_window = renderer.getWindow();
+
 	glfwSetInputMode(*m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	unsigned char pixels[16 * 16 * 4];
 	memset(pixels, 0xff, sizeof(pixels));
@@ -528,11 +512,6 @@ int main()
 	glfwSetWindowUserPointer(*m_window, &renderer);
 	glfwSetFramebufferSizeCallback(*renderer.getWindow(), framebufferResizeCallback);
 	glfwSetKeyCallback(*renderer.getWindow(), key_callback);
-
-	//test????
-	auto verticesCopy = mesh.m_vertices;
-	
-	std::cout << sizeof(glm::mat4) << std::endl;
 
 	auto startTime = std::chrono::high_resolution_clock::now(); 
 	
@@ -550,6 +529,18 @@ int main()
 
 		auto boneT = getBonesTransformation(mesh.m_skeleton, anim, time);
 
+		glfwPollEvents();
+
+		renderer.drawTriangle(boneT);
+	
+	}
+	
+	
+}
+
+
+
+/*
 		for (unsigned int i = 0; i < mesh.m_vertices.size(); i++)
 		{
 			auto vertex = verticesCopy[i];
@@ -563,10 +554,4 @@ int main()
 		}
 
 		renderer.setVertices(mesh.m_vertices, mesh.m_indices);
-		glfwPollEvents();
-		renderer.drawTriangle();
-	
-	}
-	
-	
-}
+		*/

@@ -11,9 +11,11 @@ VkVertexInputBindingDescription Vertex::getVertexBindingDesc()
 
 }
 
-std::array<VkVertexInputAttributeDescription, 2> Vertex::getVertexAttriDesc()
+std::vector<VkVertexInputAttributeDescription> Vertex::getVertexAttriDesc()
 {
-	std::array<VkVertexInputAttributeDescription, 2> arr;
+	std::vector<VkVertexInputAttributeDescription> arr;
+	arr.resize(4);
+
 	arr[0].binding = 0;
 	arr[0].location = 0;
 	arr[0].offset = offsetof(Vertex, position);
@@ -23,6 +25,17 @@ std::array<VkVertexInputAttributeDescription, 2> Vertex::getVertexAttriDesc()
 	arr[1].location = 1;
 	arr[1].offset = offsetof(Vertex, color);
 	arr[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	
+	arr[2].binding = 0;
+	arr[2].location = 2;
+	arr[2].offset = offsetof(Vertex, boneWeights);
+	arr[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+	arr[3].binding = 0;
+	arr[3].location = 3;
+	arr[3].offset = offsetof(Vertex, affectedBonesID);
+	arr[3].format = VK_FORMAT_R32G32B32A32_UINT;
+	
 	return arr;
 }
 
@@ -37,6 +50,11 @@ Renderer::Renderer()
 	m_clearColor.float32[2] = 0.0f;
 	m_clearColor.float32[3] = 1.0f;
 	m_clearValue.color = m_clearColor;
+
+	m_mvp.model = glm::rotate(glm::mat4(1.0f), glm::radians(180+30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));  //TODO
+
+	m_mvp.view = glm::lookAt(glm::vec3(0, 200,-400), glm::vec3(0,100,0), glm::vec3(0,1,0));
+
 }
 
 std::vector<char> Renderer::loadShaderBinary(const std::string& filePath)
@@ -60,7 +78,7 @@ void Renderer::clearScreen()
 {
 }
 
-void Renderer::drawTriangle()
+void Renderer::drawTriangle(const std::vector<glm::mat4>& boneT)
 {
 	if (isChangingSize || m_minimized)
 	{
@@ -83,7 +101,8 @@ void Renderer::drawTriangle()
 
 	vkResetFences(m_device, 1, &m_imageFinishRenderFence[m_currentRenderingImgIdx]);
 
-	updateFrame();
+
+	updateUniformBuffer(boneT);
 	
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -124,9 +143,6 @@ void Renderer::resizeWindow(int width, int height)
 
 void Renderer::init()
 {
-	
-	
-
 	createWindow();
 
 	createInstance();
@@ -137,15 +153,23 @@ void Renderer::init()
 
 	createLogicalDevice();
 
+	createSwapchain();
+
+	createImageView();
+
 	createCommandPool();
 
 	createVertexBuffer(m_vertices);
 
 	createIndexBuffer(m_indices);
 
-	createSwapchain();
+	createUniformBuffer();
 
-	createImageView();
+	createDescriptorSetLayout();
+
+	createDescriptorPool();
+
+	createDescriptorSets();
 
 	createRenderPass();
 	
@@ -157,17 +181,7 @@ void Renderer::init()
 
 	createCommandBuffers();
 
-	m_mvp.model = glm::mat4(1.0);
-	m_mvp.view = glm::lookAt(glm::vec3(0.0f, 0.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	//glm::mat4()
-	//m_mvp.view = glm::translate(glm::mat4(), glm::vec3(0, 0, 5));
-	//m_mvp.proj = glm::mat4(1.0);
-	m_mvp.proj = glm::perspective(glm::radians(45.0f), m_swapchainExtent.width / (float)m_swapchainExtent.height, 0.1f, 1000000.0f);
-	m_mvp.proj[1][1] *= -1;
 	recordCommandBuffers();
-
-	
-
 }
 
 void Renderer::createWindow()
@@ -370,6 +384,7 @@ void Renderer::createSwapchain()
 	createInfo.imageFormat = m_imageFormat; //SHORTCUT!!
 	createInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 	m_swapchainExtent = { m_windowWidth, m_windowHeight };
+	m_mvp.proj = glm::perspective(glm::radians(45.0f), m_swapchainExtent.width / (float)m_swapchainExtent.height, 0.1f, 1000000.0f);
 	createInfo.imageExtent = m_swapchainExtent;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -522,7 +537,8 @@ void Renderer::recordCommandBuffers()
 
 		vkCmdBindIndexBuffer(m_commandBuffers[i], m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-		
+		vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[i], 0, nullptr);
+
 		vkCmdPushConstants(m_commandBuffers[i], m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MVP), (void*)&m_mvp);
 
 		vkCmdDrawIndexed(m_commandBuffers[i], (uint32_t)m_indices.size(), 1, 0, 0, 0);
@@ -591,11 +607,12 @@ void Renderer::createGraphicsPipeline()
 
 
 	//fix functions
-	VkPipelineVertexInputStateCreateInfo vertInputStateCreatInfo = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
-	vertInputStateCreatInfo.vertexAttributeDescriptionCount = 2;
-	vertInputStateCreatInfo.pVertexAttributeDescriptions = Vertex::getVertexAttriDesc().data();
-	vertInputStateCreatInfo.vertexBindingDescriptionCount = 1;
-	vertInputStateCreatInfo.pVertexBindingDescriptions = &Vertex::getVertexBindingDesc();
+	VkPipelineVertexInputStateCreateInfo vertInputStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+	auto vertexAttriDesc = Vertex::getVertexAttriDesc();
+	vertInputStateCreateInfo.vertexAttributeDescriptionCount = (uint32_t)vertexAttriDesc.size();
+	vertInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttriDesc.data();
+	vertInputStateCreateInfo.vertexBindingDescriptionCount = 1;
+	vertInputStateCreateInfo.pVertexBindingDescriptions = &Vertex::getVertexBindingDesc();
 
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -603,10 +620,10 @@ void Renderer::createGraphicsPipeline()
 	inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
 	VkViewport viewport = {};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
 	viewport.width = (float)m_windowWidth;
-	viewport.height = (float)m_windowHeight;
+	viewport.height = -(float)m_windowHeight;
+	viewport.x = 0.0f;
+	viewport.y = (float)m_windowHeight;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
@@ -654,6 +671,8 @@ void Renderer::createGraphicsPipeline()
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 	pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 	pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstRange;
+	pipelineLayoutCreateInfo.setLayoutCount = 1;
+	pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
 	if (vkCreatePipelineLayout(m_device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
 	{
 		std::cerr << "Fail to create pipeline layout!" << std::endl;
@@ -663,7 +682,7 @@ void Renderer::createGraphicsPipeline()
 	VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
 	graphicsPipelineCreateInfo.stageCount = 2;
 	graphicsPipelineCreateInfo.pStages = shaderStageInfos;
-	graphicsPipelineCreateInfo.pVertexInputState = &vertInputStateCreatInfo;
+	graphicsPipelineCreateInfo.pVertexInputState = &vertInputStateCreateInfo;
 	graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
 	graphicsPipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
 	graphicsPipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
@@ -810,15 +829,10 @@ void Renderer::copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size)
 
 void Renderer::createVertexBuffer(const std::vector<Vertex>& vertices)
 {
-	vkDeviceWaitIdle(m_device);
-
-	vkDestroyBuffer(m_device, m_vertexBuffer, nullptr);  ///????
-
-	vkFreeMemory(m_device, m_vertexBufferMem, nullptr);  //????
-
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMem;
 	VkDeviceSize size = sizeof(Vertex) * vertices.size();
+
 	createBuffer(stagingBuffer, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, size, stagingBufferMem, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 	void* data = nullptr;
@@ -833,6 +847,7 @@ void Renderer::createVertexBuffer(const std::vector<Vertex>& vertices)
 	copyBuffer(stagingBuffer, m_vertexBuffer, size);
 
 	vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+
 	vkFreeMemory(m_device, stagingBufferMem, nullptr);
 	
 }
@@ -859,42 +874,111 @@ void Renderer::createIndexBuffer(const std::vector<uint32_t>& indices)
 
 void Renderer::updateFrame()
 {
-	createVertexBuffer(m_vertices);
 
-	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	vkBeginCommandBuffer(m_commandBuffers[m_currentRenderingImgIdx], &beginInfo);
+}
+
+void Renderer::createDescriptorSetLayout()
+{
+	std::array<VkDescriptorSetLayoutBinding, 1> descSetLayoutBinding = {};
+	descSetLayoutBinding[0].binding = 0;
+	descSetLayoutBinding[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	descSetLayoutBinding[0].descriptorCount = 1;
+	descSetLayoutBinding[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	descSetLayoutBinding[0].pImmutableSamplers = nullptr;
+
+	
+	VkDescriptorSetLayoutCreateInfo layoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+	layoutCreateInfo.bindingCount = (uint32_t)descSetLayoutBinding.size();
+	layoutCreateInfo.pBindings = descSetLayoutBinding.data();
+	
+	if (vkCreateDescriptorSetLayout(m_device, &layoutCreateInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
+	{
+		std::cerr << "Fail to create descriptor set layout." << std::endl;
+		throw std::runtime_error("");
+	}
+
+}
+
+void Renderer::createDescriptorPool()
+{
+	VkDescriptorPoolSize descPoolSzie = {};
+	descPoolSzie.descriptorCount = n_buffers;
+	descPoolSzie.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+	VkDescriptorPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+	createInfo.poolSizeCount = 1;
+	createInfo.pPoolSizes = &descPoolSzie;
+	createInfo.maxSets = n_buffers;
+
+	if (vkCreateDescriptorPool(m_device, &createInfo, nullptr, &m_descriptorSetPool) != VK_SUCCESS)
+	{
+		std::cerr << "Fail to create descriptor pool." << std::endl;
+		throw std::runtime_error("");
+	}
+}
+
+void Renderer::createDescriptorSets()
+{
+	std::vector<VkDescriptorSetLayout> layouts(n_buffers, m_descriptorSetLayout);
+
+	VkDescriptorSetAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+	allocInfo.descriptorPool = m_descriptorSetPool;
+	allocInfo.descriptorSetCount = n_buffers;
+	allocInfo.pSetLayouts = layouts.data();
 
 
-	VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-	renderPassBeginInfo.renderPass = m_renderPass;
-	renderPassBeginInfo.renderArea.offset = { 0,0 };
-	renderPassBeginInfo.renderArea.extent = m_swapchainExtent;
-	renderPassBeginInfo.framebuffer = m_framebuffers[m_currentRenderingImgIdx];
-	renderPassBeginInfo.clearValueCount = 1;
-	renderPassBeginInfo.pClearValues = &m_clearValue;
+	m_descriptorSets.resize(n_buffers);
+	if (vkAllocateDescriptorSets(m_device, &allocInfo, m_descriptorSets.data()) != VK_SUCCESS)
+	{
+		std::cerr << "Fail to create descriptor sets." << std::endl;
+		throw std::runtime_error("");
+	}
 
-	vkCmdBeginRenderPass(m_commandBuffers[m_currentRenderingImgIdx], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	for (uint32_t i = 0; i < n_buffers; i++)
+	{
+		VkDescriptorBufferInfo bufferInfo = {};
+		bufferInfo.offset = 0;
+		bufferInfo.buffer = m_uniformBuffers[i];
+		bufferInfo.range = VK_WHOLE_SIZE;
 
-	vkCmdBindPipeline(m_commandBuffers[m_currentRenderingImgIdx], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+		VkWriteDescriptorSet writeDescSet = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+		writeDescSet.descriptorCount = 1;
+		writeDescSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		writeDescSet.dstArrayElement = 0;
+		writeDescSet.dstBinding = 0;
+		writeDescSet.dstSet = m_descriptorSets[i];
+		writeDescSet.pBufferInfo = &bufferInfo;
+		vkUpdateDescriptorSets(m_device, 1, &writeDescSet, 0, nullptr);
+	}
+}
 
-	VkDeviceSize offset[] = { 0 };
-	VkBuffer vertexBuffers[] = { m_vertexBuffer };
-	vkCmdBindVertexBuffers(m_commandBuffers[m_currentRenderingImgIdx], 0, 1, vertexBuffers, offset);
+void Renderer::createUniformBuffer()
+{
+	VkDeviceSize boneTransformBufferSize = sizeof(glm::mat4) * MAX_BONE_PER_SKELETON;
+	m_uniformBuffers.resize(n_buffers);
+	m_uniformBufferMem.resize(n_buffers);
+	for (unsigned int i = 0; i < m_uniformBuffers.size(); i++)
+	{
+		createBuffer(m_uniformBuffers[i], VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, boneTransformBufferSize, m_uniformBufferMem[i], VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	}
 
-	vkCmdBindIndexBuffer(m_commandBuffers[m_currentRenderingImgIdx], m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+}
 
-	m_mvp.view = cam.getCameraMatrix();
+void Renderer::updateUniformBuffer(const std::vector<glm::mat4>& boneTransforms)
+{
+	//change the buffer of the image that is not being rendered now
 
-	vkCmdPushConstants(m_commandBuffers[m_currentRenderingImgIdx], m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MVP), (void*)&m_mvp);
+	auto transformCopy = boneTransforms;
 
-	vkCmdDrawIndexed(m_commandBuffers[m_currentRenderingImgIdx], (uint32_t)m_indices.size(), 1, 0, 0, 0);
+	void* data = nullptr;
 
-	vkCmdEndRenderPass(m_commandBuffers[m_currentRenderingImgIdx]);
+	unsigned int writeToImageIdx = m_currentRenderingImgIdx ^ 1;
 
+	vkMapMemory(m_device, m_uniformBufferMem[writeToImageIdx], 0, sizeof(glm::mat4) * boneTransforms.size(), 0, &data);
 
-	vkEndCommandBuffer(m_commandBuffers[m_currentRenderingImgIdx]);
+	memcpy(data, transformCopy.data(), sizeof(glm::mat4) * boneTransforms.size());
 
-		
+	vkUnmapMemory(m_device, m_uniformBufferMem[writeToImageIdx]);
 
 }
 
@@ -951,6 +1035,14 @@ void Renderer::cleanup()
 
 	vkDeviceWaitIdle(m_device);
 
+	for (unsigned int i = 0; i < m_uniformBuffers.size(); i++)
+	{
+		vkDestroyBuffer(m_device, m_uniformBuffers[i], nullptr);
+		vkFreeMemory(m_device, m_uniformBufferMem[i], nullptr);
+	}
+
+	vkDestroyDescriptorPool(m_device, m_descriptorSetPool, nullptr);
+
 	vkDestroyBuffer(m_device, m_indexBuffer, nullptr);
 
 	vkFreeMemory(m_device, m_indexBufferMem, nullptr);
@@ -984,6 +1076,7 @@ void Renderer::cleanup()
 	
 	vkDestroyFence(m_device, m_acquireImageFence, nullptr);
 
+	vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
 
 	vkDestroyCommandPool(m_device, m_commandPool, nullptr);
 

@@ -23,6 +23,7 @@
 #define PRESENT_QUEUE "presentQueue"
 
 const int MAX_BONE_PER_VERTEX = 4;
+const int MAX_BONE_PER_SKELETON = 200;
 
 struct Camera
 {
@@ -56,6 +57,7 @@ struct Camera
 	{
 		glm::mat4 translate = glm::translate(glm::mat4(1.0), distance * direction);
 		m_pos = translate * m_pos;
+		std::cout << glm::to_string(m_pos) << std::endl;
 	}
 
 };
@@ -78,11 +80,10 @@ struct Vertex
 	glm::vec4 position = glm::vec4(0);
 	glm::vec4 color = glm::vec4(0);
 	glm::vec4 boneWeights = { 0.0,0.0,0.0,0.0 };
-	//float boneWeights[MAX_BONE_PER_VERTEX] = { 0.0,0.0,0.0,0.0 };
-	unsigned int affectedBonesID[MAX_BONE_PER_VERTEX] = { 0,0,0,0 };
+	glm::uvec4 affectedBonesID= { 0,0,0,0 };
 
 	static VkVertexInputBindingDescription getVertexBindingDesc();
-	static std::array<VkVertexInputAttributeDescription, 2> getVertexAttriDesc();
+	static std::vector<VkVertexInputAttributeDescription> getVertexAttriDesc();
 };
 
 struct MVP
@@ -115,8 +116,8 @@ public:
 										1,2,5,5,1,6,
 										4,5,6,6,4,7,
 										0,7,6,6,0,1};
-	glm::vec4 c = { 0,0,-20,1 };
-	Camera cam;
+
+
 	Renderer();
 
 	~Renderer();
@@ -130,7 +131,7 @@ public:
 	
 	void clearScreen();
 
-	void drawTriangle();
+	void drawTriangle(const std::vector<glm::mat4>& boneT);
 
 	void resizeWindow(int width, int height);
 
@@ -145,7 +146,6 @@ public:
 	{
 		m_vertices = v;
 		m_indices = idx;
-
 	}
 
 	void init();
@@ -170,9 +170,9 @@ private:
 	
 	void createImageView();
 
-	void createFramebuffer();
-
 	void createRenderPass();
+
+	void createFramebuffer();
 
 	void createCommandPool();
 
@@ -204,6 +204,17 @@ private:
 
 	void createIndexBuffer(const std::vector<uint32_t>& indices);
 
+	void createUniformBuffer();
+
+	void createDescriptorSetLayout();
+
+	void createDescriptorPool();
+
+	void createDescriptorSets();
+
+	void updateUniformBuffer(const std::vector<glm::mat4>& boneTransforms);
+
+	
 	void updateFrame();
 
 	void cleanup();
@@ -275,7 +286,13 @@ private:
 
 	VkDeviceMemory m_indexBufferMem;
 
-	
+	VkDescriptorSetLayout m_descriptorSetLayout;
+
+	VkDescriptorPool m_descriptorSetPool;
+	std::vector<VkDescriptorSet> m_descriptorSets;
+
+	std::vector<VkBuffer> m_uniformBuffers;
+	std::vector<VkDeviceMemory> m_uniformBufferMem;
 };
 
 

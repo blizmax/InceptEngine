@@ -32,27 +32,27 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     else if (key == GLFW_KEY_UP && action == GLFW_PRESS)
     {
-        renderer->cam.rotateLocal(5, renderer->cam.m_x);
+       
     }
     else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
     {
-        renderer->cam.rotateLocal(-5, renderer->cam.m_x);
+        
     }
     else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
     {
-        renderer->cam.rotateLocal(5, renderer->cam.m_y);
+       
     }
     else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
     {
-        renderer->cam.rotateLocal(-5, renderer->cam.m_y);
+       
     }
     else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
-        renderer->cam.translate(-2.0f, -renderer->cam.m_z);
+        
     }
     else if (key == GLFW_KEY_3 && action == GLFW_PRESS)
     {
-        renderer->cam.translate(2.0f, renderer->cam.m_y);
+        
     }
 
 }
