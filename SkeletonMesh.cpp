@@ -7,6 +7,11 @@ SkeletonMesh::SkeletonMesh(glm::mat4 rootTransform)
 
 void SkeletonMesh::addBoneToVertex(unsigned int boneID, unsigned int vertexID, float weights)
 {
+	if (m_vertices[vertexID].affectedBonesID[0] == 0)
+	{
+		m_vertices[vertexID].boneWeights[0] = 0.0f;
+	}
+
 	float min = 1.0f;
 	unsigned int minIdx = 0;
 	for (unsigned int i = 0; i < MAX_BONE_PER_VERTEX; i++)
@@ -17,6 +22,8 @@ void SkeletonMesh::addBoneToVertex(unsigned int boneID, unsigned int vertexID, f
 			minIdx = i;
 		}
 	}
+
+
 
 	m_vertices[vertexID].boneWeights[minIdx] = weights;
 	m_vertices[vertexID].affectedBonesID[minIdx] = boneID;
@@ -66,12 +73,13 @@ SkeletonMesh loadSkeletonMesh(const std::string& filepath, const std::string& ro
 	aiMesh* mesh = scene->mMeshes[0];
 
 
-
+	bool hasTextureCoords = mesh->HasTextureCoords(0);
 
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex v;
 		v.position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1 };
+		
 		if (mesh->HasVertexColors(i))
 		{
 			v.color = { mesh->mColors[i][0].r, mesh->mColors[i][0].g, mesh->mColors[i][0].b, 1.0 };
@@ -82,8 +90,16 @@ SkeletonMesh loadSkeletonMesh(const std::string& filepath, const std::string& ro
 			v.color = { 0.0, 0.0, 0.0, 1.0 };
 		}
 
+		if (hasTextureCoords)
+		{
+			v.texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y, mesh->mTextureCoords[0][i].z };
+		}
+
 		skMesh.m_vertices.push_back(v);
 	}
+
+
+
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 	{
 		aiFace* face = &mesh->mFaces[i];

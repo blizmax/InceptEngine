@@ -199,7 +199,9 @@ std::vector<glm::mat4> getBonesTransformation(const Skeleton& skeleton, const An
 
 
 	std::vector<glm::mat4> boneTransAfterProp;
-	boneTransAfterProp.resize(skeleton.m_bones.size());
+	boneTransAfterProp.resize(skeleton.m_bones.size() + 1);
+	boneTransAfterProp[0] = glm::mat4(1.0);
+
 	for (auto& bone : boneTransAfterProp)
 	{
 		bone = glm::mat4(1.0);

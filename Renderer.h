@@ -18,6 +18,7 @@
 #include "Vertex.h"
 
 
+
 #define GRAPHICS_QUEUE "graphicsQueue"
 #define PRESENT_QUEUE "presentQueue"
 
@@ -48,25 +49,10 @@ struct QueueFamilyIndices
 class Renderer
 {
 public:
-	std::vector<Vertex> m_vertices = {
-		{{1.0, 1.0, -1.0, 1.0}, {0.0,0.0,0.0,1.0}},
-		{{1.0, 1.0, 1.0, 1.0}, {0.0,0.0,0.0,1.0}},
-		{{-1.0, 1.0, 1.0, 1.0}, {0.0,0.0,0.0,1.0}},
-		{{-1.0, 1.0, -1.0, 1.0}, {0.0,0.0,0.0,1.0}},
-		{{-1.0, -1.0, -1.0, 1.0}, {0.0,0.0,0.0,1.0}},
-		{{-1.0, -1.0, 1.0, 1.0}, {0.0,0.0,0.0,1.0}},
-		{{1.0, -1.0, 1.0, 1.0}, {0.0,0.0,0.0,1.0}},
-		{{1.0, -1.0, -1.0, 1.0}, {0.0,0.0,0.0,1.0}}
-	};
+	std::vector<Vertex> m_vertices = {};
 
+	std::vector<uint32_t> m_indices = {};
 
-
-	std::vector<uint32_t> m_indices = { 0,1,2,1,2,3,
-										2,3,5,3,4,5,
-										0,3,4,0,4,7,
-										1,2,5,5,1,6,
-										4,5,6,6,4,7,
-										0,7,6,6,0,1};
 
 
 	Renderer();
@@ -82,7 +68,7 @@ public:
 	
 	void clearScreen();
 
-	void drawTriangle(const std::vector<glm::mat4>& boneT);
+	void drawFrame();
 
 	void resizeWindow(int width, int height);
 
@@ -99,6 +85,9 @@ public:
 		m_indices = idx;
 	}
 
+	void addVertices(const std::vector<Vertex>& v, const std::vector<uint32_t>& idx);
+
+	void updateUniformBuffer(const std::vector<glm::mat4>& boneTransforms);
 
 	void init();
 private:
@@ -120,7 +109,7 @@ private:
 	
 	void createSwapchain();
 	
-	void createImageView();
+	void createImageViews();
 
 	void createRenderPass();
 
@@ -164,10 +153,33 @@ private:
 
 	void createDescriptorSets();
 
-	void updateUniformBuffer(const std::vector<glm::mat4>& boneTransforms);
+
+	void recordCommandBuffer(uint32_t i);
 
 	
+	void createTextureImage();
+	
 	void updateFrame();
+
+	void createImage(VkImage& image, VkDeviceMemory& imageMem, uint32_t width, uint32_t height, uint32_t depth, VkImageType type, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties);
+
+	VkCommandBuffer beginSingleTimeCommandBuffer();
+
+	void endSingleTimeCommandBuffer(VkCommandBuffer& buffer);
+
+	void transitImageLayout(VkImage& image,
+							VkImageLayout oldLayout,
+							VkImageLayout newLayout,
+							VkAccessFlags srcAccessMask,
+							VkAccessFlags dstAccessMask,
+							VkImageAspectFlags aspectFlag,
+							VkPipelineStageFlags srcStageMask,
+							VkPipelineStageFlags dstStageMask);
+
+
+	VkImageView createImageView(VkImage& image, VkImageAspectFlags aspectMask, VkFormat viewFormat, VkImageViewType viewType);
+
+	void createTextureSampler();
 
 	void cleanup();
 
@@ -245,6 +257,12 @@ private:
 
 	std::vector<VkBuffer> m_uniformBuffers;
 	std::vector<VkDeviceMemory> m_uniformBufferMem;
+
+	VkImage m_textureIamge;
+	VkDeviceMemory m_textureImageMem;
+	VkImageView m_textureImageView;
+
+	VkSampler m_textureSampler;
 };
 
 

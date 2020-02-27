@@ -14,12 +14,13 @@ VkVertexInputBindingDescription Vertex::getVertexBindingDesc()
 std::vector<VkVertexInputAttributeDescription> Vertex::getVertexAttriDesc()
 {
 	std::vector<VkVertexInputAttributeDescription> arr;
-	arr.resize(4);
+	arr.resize(5);
 
 	arr[0].binding = 0;
 	arr[0].location = 0;
 	arr[0].offset = offsetof(Vertex, position);
 	arr[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
 
 	arr[1].binding = 0;
 	arr[1].location = 1;
@@ -28,13 +29,18 @@ std::vector<VkVertexInputAttributeDescription> Vertex::getVertexAttriDesc()
 
 	arr[2].binding = 0;
 	arr[2].location = 2;
-	arr[2].offset = offsetof(Vertex, boneWeights);
-	arr[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	arr[2].offset = offsetof(Vertex, texCoord);
+	arr[2].format = VK_FORMAT_R32G32B32_SFLOAT;
 
 	arr[3].binding = 0;
 	arr[3].location = 3;
-	arr[3].offset = offsetof(Vertex, affectedBonesID);
-	arr[3].format = VK_FORMAT_R32G32B32A32_UINT;
+	arr[3].offset = offsetof(Vertex, boneWeights);
+	arr[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+	arr[4].binding = 0;
+	arr[4].location = 4;
+	arr[4].offset = offsetof(Vertex, affectedBonesID);
+	arr[4].format = VK_FORMAT_R32G32B32A32_UINT;
 
 	return arr;
 }

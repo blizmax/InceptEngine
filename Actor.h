@@ -15,14 +15,12 @@ struct LocalFrame
 	glm::vec4 Z = { 0,0,1,0 };
 	glm::vec4 O = { 0,0,0,1 };
 
-	glm::mat4 getLocalFrame()
-	{
-		return glm::mat4(X, Y, Z, O);
-	}
+	glm::mat4 getLocalFrame();
 
-	void translate();
-	void rotate();
-	void scale();
+	void translate(glm::vec3 direction, float amount);
+	void rotate(glm::vec3 axis, float degree);
+	void rotate(glm::vec4 axis, float degree);
+	void scale(glm::vec3 scale);
 
 };
 
@@ -41,7 +39,10 @@ public:
 
 	SkeletonMesh* getSkeletonMesh();
 
-	glm::mat4 getTransformation()
+
+	void setRootTransform(glm::mat4 t);
+
+	glm::mat4 getModelTransformation()
 	{
 		return m_localFrame.getLocalFrame() * m_rootTransform;
 	}

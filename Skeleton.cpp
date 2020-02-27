@@ -99,7 +99,7 @@ Skeleton extractSkeletonFromAnimFile(const aiScene* scene, const std::string& ro
 		throw std::runtime_error("");
 	}
 
-	unsigned int currentID = 0;
+	unsigned int currentID = 1;
 	Bone rootBone(pRootBone->mName.C_Str(), "", glm::mat4(1.0));
 	rootBone.m_boneId = currentID;
 	currentID++;

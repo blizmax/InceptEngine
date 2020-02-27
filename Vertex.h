@@ -19,7 +19,8 @@ struct Vertex
 {
 	glm::vec4 position = glm::vec4(0);
 	glm::vec4 color = glm::vec4(0);
-	glm::vec4 boneWeights = { 0.0,0.0,0.0,0.0 };
+	glm::vec3 texCoord = glm::vec3(0);
+	glm::vec4 boneWeights = { 1.0,0.0,0.0,0.0 };
 	glm::uvec4 affectedBonesID = { 0,0,0,0 };
 
 	static VkVertexInputBindingDescription getVertexBindingDesc();
