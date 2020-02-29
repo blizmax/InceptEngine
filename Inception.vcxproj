@@ -176,12 +176,15 @@
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorComponent.cpp" />
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ChangeCooridinateSystem.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="BasicStaticMesh.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PrimitiveActors.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="ResourceExporter.cpp" />
     <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="SkeletonMesh.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
@@ -196,6 +199,7 @@
     <ClInclude Include="Collision.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="PrimitiveActors.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="SkeletonMesh.h" />

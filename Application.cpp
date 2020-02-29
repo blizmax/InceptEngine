@@ -4,105 +4,54 @@
 #include "WindowEventCallback.h"
 #include "Player.h"
 #include "Camera.h"
-#include "BasicStaticMesh.h"
+#include "PrimitiveActors.h"
 
 #include <fstream>
 #include <iostream>
 
-void skeletonMeshExport(const SkeletonMesh& sk)
-{
-	std::string vertexInfo;
-	for (auto vertex : sk.m_vertices)
-	{
-		vertexInfo.append(glm::to_string(vertex.position));
-		vertexInfo.append("@");
-		vertexInfo.append(glm::to_string(vertex.boneWeights));
-		vertexInfo.append("@");
-		vertexInfo.append(glm::to_string(vertex.affectedBonesID));
-		vertexInfo.append("\n");
-	}
-
-	std::string indicesInfo;
-	for (auto index : sk.m_indices)
-	{
-		indicesInfo.append(std::to_string(index));
-		indicesInfo.append("\n");
-	}
-
-	std::ofstream myfile;
-	myfile.open("hornetVertices.txt");
-	myfile << vertexInfo;
-	myfile.close();
-
-
-	myfile.open("hornetIndices.txt");
-	myfile << indicesInfo;
-	myfile.close();
-
-
-
-	std::cout << "Export finish" << std::endl;
-}
-
-void animationExport(const Skeleton& sk, const Animation& anim)
-{
-	std::string animInfo = "";
-	float step = anim.m_duration / 250;
-	float time = 0;
-	for (int i = 0; i < 245; i++)
-	{
-		animInfo.append(std::to_string(time));
-		auto boneT = getBonesTransformation(sk, anim, time);
-
-
-		for (auto transformation : boneT)
-		{
-			animInfo.append("@");
-			animInfo.append(glm::to_string(transformation));
-		}
-		animInfo.append("\n");
-		time += step;
-	}
-
-	std::ofstream myfile;
-	myfile.open("hornetNormalAttackOne.txt");
-	myfile << animInfo;
-	myfile.close();
-
-	std::cout << "Export finish" << std::endl;
-}
-
 
 int main()
 {
+	Renderer* renderer = new Renderer();
+
+	std::string modelPath = "D:\\Inception\\Content\\Models\\HornetGL.FBX";
+	std::string texturePath = "D:\\Inception\\Content\\Textures\\T_Hornet.BMP";
+	std::string grassTexturePath = "D:\\Inception\\Content\\Textures\\T_Grass.BMP";
+
+	std::string animationPath = "D:\\Inception\\Content\\Models\\HornetAttackGL.FBX";
+
+
+	SkeletonMesh* hornetMesh = SkeletonMesh::loadSkeletonMesh(renderer, modelPath, texturePath, "root");
+
+	SkeletonMesh* hornet22Mesh = SkeletonMesh::loadSkeletonMesh(renderer, modelPath, texturePath, "root");
+
+
+
+	Animation* hornetNormalAttackOne = loadAnimation(animationPath, hornetMesh, "root");
+
 	
-	SkeletonMesh hornetMesh = loadSkeletonMesh("D:\\Inception\\Content\\Models\\HornetGL.FBX", "root");
+	auto hornetRootRotate =  glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	Player* hornet = new Player(hornetRootRotate);
+	Actor* hornet22 = new Actor(glm::translate(glm::vec3(150, 0, 0)) * hornetRootRotate);
 
-	Animation hornetNormalAttackOne = loadAnimation("D:\\Inception\\Content\\Models\\HornetAttackGL.FBX", hornetMesh, "root");
+	hornet->setSkeletonMesh(hornetMesh);
+	hornet22->setSkeletonMesh(hornet22Mesh);
 
-	cleanAnimation(&hornetNormalAttackOne, "root");
+	Actor* plane = new Plane(renderer, grassTexturePath);
 
+	std::vector<glm::mat4> planeTransformation = { glm::mat4(1.0f), glm::scale(glm::vec3(3000,0,3000)) };
+	plane->getSkeletonMesh()->initializeTransformationBuffer(renderer, planeTransformation);
+
+
+	renderer->spawnActor(plane);
+
+	renderer->spawnActor(hornet);
+
+	renderer->spawnActor(hornet22);
 
 	
-	auto hornetRootRotate = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	Player hornet(hornetRootRotate);
-	hornet.setSkeletonMesh(&hornetMesh);
-	
-	Cube mycube;
-	Plane myplane;
 
-	Renderer renderer;
-	renderer.setVertices(hornet.getSkeletonMesh()->m_vertices, hornet.getSkeletonMesh()->m_indices);
-	//renderer.addVertices(myplane.m_vertices, myplane.m_indices);
-
-	renderer.m_mvp.model = hornet.getModelTransformation();
-
-	//renderer.m_mvp.model = glm::mat4(1.0);
-
-	renderer.init();
-
-
-	auto m_window = renderer.getWindow();
+	auto m_window = renderer->getWindow();
 
 	glfwSetInputMode(*m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	unsigned char pixels[16 * 16 * 4];
@@ -119,14 +68,14 @@ int main()
 
 	std::vector<glm::mat4> displayMesh(100, glm::mat4(1.0));
 
-	Camera followingCam = Camera(&hornet, glm::vec4(0, 119.745132f, 475.598633f, 1.0f), glm::vec4(0, 128.575134f, 76.504005f, 1.0f));
+	Camera followingCam = Camera(hornet, glm::vec4(0, 119.745132f, 475.598633f, 1.0f), glm::vec4(0, 128.575134f, 76.504005f, 1.0f));
 
 	bool enableCameraMove = false;
-	Data data = { &renderer, &followingCam, &enableCameraMove, &hornet };
+	Data data = { renderer, &followingCam, &enableCameraMove, hornet };
 
 	glfwSetWindowUserPointer(*m_window, &data);
-	glfwSetFramebufferSizeCallback(*renderer.getWindow(), framebufferResizeCallback);
-	glfwSetKeyCallback(*renderer.getWindow(), key_callback);
+	glfwSetFramebufferSizeCallback(*renderer->getWindow(), framebufferResizeCallback);
+	glfwSetKeyCallback(*renderer->getWindow(), key_callback);
 
 
 	glfwSetInputMode(*m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -135,9 +84,9 @@ int main()
 	double lastXPos;
 	double lastYPos;
 
-	glfwGetCursorPos(*renderer.getWindow(), &xPos, &yPos);
+	glfwGetCursorPos(*renderer->getWindow(), &xPos, &yPos);
 
-	glfwGetCursorPos(*renderer.getWindow(), &lastXPos, &lastYPos);
+	glfwGetCursorPos(*renderer->getWindow(), &lastXPos, &lastYPos);
 
 	while (!glfwWindowShouldClose(*m_window))
 	{
@@ -149,9 +98,9 @@ int main()
 			startTime = std::chrono::high_resolution_clock::now();
 		}
 
-		auto boneT = getBonesTransformation(hornet.getSkeletonMesh()->m_skeleton, hornetNormalAttackOne, time);
+		auto boneT = getBonesTransformation(*hornet->getSkeletonMesh()->getSkeleton(), *hornetNormalAttackOne, time);
 
-		glfwGetCursorPos(*renderer.getWindow(), &xPos, &yPos);
+		glfwGetCursorPos(*renderer->getWindow(), &xPos, &yPos);
 
 		if (enableCameraMove)
 		{
@@ -165,18 +114,30 @@ int main()
 		
 		glfwPollEvents();
 
-		renderer.m_mvp.model = hornet.getModelTransformation();
-		//renderer.m_mvp.model = hornet.m_localFrame.getLocalFrame();
-		renderer.m_mvp.view = followingCam.cameraMatrix();
-		//renderer.m_mvp.view = glm::lookAt(glm::vec3(0, 0, 500), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		renderer->m_mvp.view = followingCam.cameraMatrix();
+
 		
+		boneT[1] = hornet->getModelTransformation();
 
-		renderer.updateUniformBuffer(boneT);
+		hornet->getSkeletonMesh()->updateTransformationBuffer(renderer, boneT);
 
-		renderer.drawFrame();
+		boneT[1] = hornet22->getModelTransformation();
+
+		hornet22->getSkeletonMesh()->updateTransformationBuffer(renderer, boneT);
+
+		
+		renderer->drawFrame();
 	
 	}
 	
+
+	delete hornet;
+	
+	delete hornet22;
+
+	delete plane;
+
+	delete renderer;
 	
 }
 

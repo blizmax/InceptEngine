@@ -1,6 +1,6 @@
 
 #include "Actor.h"
-
+#include "SkeletonMesh.h"
 #include "Skeleton.h"
 
 Actor::Actor(glm::mat4 rootTransform)
@@ -33,6 +33,19 @@ Actor::~Actor()
 	if (m_attchedSocket != nullptr)
 	{
 		delete m_attchedSocket;
+	}
+
+	if (m_mesh != nullptr)
+	{
+		delete m_mesh;
+	}
+
+	for (auto component : m_components)
+	{
+		if (component != nullptr)
+		{
+			delete component;
+		}
 	}
 }
 

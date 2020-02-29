@@ -53,6 +53,14 @@ bool Skeleton::deleteSocket(std::string name)
 	return true;
 }
 
+void Skeleton::printBones()
+{
+	for (auto bone : m_bones)
+	{
+		std::cout << bone.first << std::endl;
+	}
+}
+
 glm::mat4 mat4_cast(const aiMatrix4x4& ai)
 {
 	glm::mat4 mat;
@@ -84,9 +92,9 @@ void traceRootBone(aiNode* curNode, aiNode*& pRootNode, const std::string& rootB
 	}
 }
 
-Skeleton extractSkeletonFromAnimFile(const aiScene* scene, const std::string& rootBoneName)
+Skeleton* Skeleton::extractSkeletonFromAnimFile(const aiScene* scene, const std::string& rootBoneName)
 {
-	Skeleton skeleton;
+	Skeleton* skeleton = new Skeleton();
 
 	std::stack<aiNode*> nodes;
 
@@ -99,11 +107,11 @@ Skeleton extractSkeletonFromAnimFile(const aiScene* scene, const std::string& ro
 		throw std::runtime_error("");
 	}
 
-	unsigned int currentID = 1;
+	unsigned int currentID = 2;
 	Bone rootBone(pRootBone->mName.C_Str(), "", glm::mat4(1.0));
 	rootBone.m_boneId = currentID;
 	currentID++;
-	skeleton.m_bones.insert(std::pair(pRootBone->mName.C_Str(), rootBone));
+	skeleton->m_bones.insert(std::pair(pRootBone->mName.C_Str(), rootBone));
 
 	nodes.push(pRootBone);
 
@@ -117,7 +125,7 @@ Skeleton extractSkeletonFromAnimFile(const aiScene* scene, const std::string& ro
 			Bone bone(child->mName.C_Str(), currentNode->mName.C_Str(), mat4_cast(child->mTransformation));
 			bone.m_boneId = currentID;
 			currentID++;
-			skeleton.m_bones.insert(std::pair(child->mName.C_Str(), bone));
+			skeleton->m_bones.insert(std::pair(child->mName.C_Str(), bone));
 			nodes.push(child);
 		}
 	}
@@ -128,7 +136,7 @@ Skeleton extractSkeletonFromAnimFile(const aiScene* scene, const std::string& ro
 		{
 			aiBone* curBone = scene->mMeshes[0]->mBones[i];
 			std::string boneName = curBone->mName.C_Str();
-			skeleton.m_bones.at(boneName).m_offset = mat4_cast(curBone->mOffsetMatrix);
+			skeleton->m_bones.at(boneName).m_offset = mat4_cast(curBone->mOffsetMatrix);
 		}
 	}
 

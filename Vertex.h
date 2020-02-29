@@ -11,7 +11,7 @@
 
 
 const int MAX_BONE_PER_VERTEX = 4;
-const int MAX_BONE_PER_SKELETON = 200;
+const int MAX_BONE_PER_SKELETON = 198;
 
 #ifndef VERTEX_H
 #define VERTEX_H

@@ -54,7 +54,7 @@ private:
 
 	Socket* m_attchedSocket;
 
-	std::vector<ActorComponent> m_components;
+	std::vector<ActorComponent*> m_components;
 
 	std::string name;
 

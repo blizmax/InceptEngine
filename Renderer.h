@@ -13,6 +13,7 @@
 #include <fstream>
 #include <array>
 #include <chrono>
+#include <mutex>
 
 #include "Math.h"
 #include "Vertex.h"
@@ -21,12 +22,13 @@
 
 #define GRAPHICS_QUEUE "graphicsQueue"
 #define PRESENT_QUEUE "presentQueue"
+const uint32_t n_buffers = 2;
 
+class Actor;
 
 
 struct MVP
 {
-	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 proj;
 };
@@ -43,15 +45,71 @@ struct QueueFamilyIndices
 	}
 };
 
+class Renderer;
 
+struct VertexBuffer
+{
+	VertexBuffer(Renderer* renderer);
+	~VertexBuffer();
+
+	Renderer* m_renderer;
+	VkBuffer m_vertexBuffer;
+	VkDeviceMemory m_vertexBufferMemory;
+};
+
+struct IndexBuffer
+{
+	IndexBuffer(Renderer* renderer);
+	~IndexBuffer();
+	Renderer* m_renderer;
+	VkBuffer m_indexBuffer;
+	VkDeviceMemory m_indexBufferMemory;
+};
+
+struct Texture
+{
+	Texture(Renderer* renderer);
+	~Texture();
+	Renderer* m_renderer;
+	VkImage m_textureImage;
+	VkDeviceMemory m_textureImageMemory;
+	VkImageView m_view;
+	VkSampler m_sampler;
+};
+
+
+//the transformation buffer, by design, is a vulkan uniform buffer of array of 200 glm::mat4
+//the first mat4 is always identity, for the usage of static mesh
+//the second mat4 is the model transformation matrix
+//the last 198 matrix are the bone transformation matrices
+
+struct TransformationBuffer
+{
+	TransformationBuffer(Renderer* renderer);
+	~TransformationBuffer();
+	Renderer* m_renderer;
+	std::array<VkBuffer, n_buffers> m_ubo;
+	std::array<VkDeviceMemory, n_buffers> m_uboMemory;
+};
+
+//this struct wrap up the vkdescriptor creation
+//which tell the shader the layout of the data in the 
+//uniform buffer object
+struct DataDescription
+{
+	DataDescription(Renderer* renderer);
+	~DataDescription();
+	Renderer* m_renderer;
+	VkDescriptorPool m_pool;
+	VkDescriptorSetLayout m_layout;
+	std::array<VkDescriptorSet, 2> m_descriptorSet;
+};
 
 
 class Renderer
 {
-public:
-	std::vector<Vertex> m_vertices = {};
 
-	std::vector<uint32_t> m_indices = {};
+public:
 
 
 
@@ -59,40 +117,53 @@ public:
 
 	~Renderer();
 
-	GLFWwindow** getWindow()
-	{
-		return &m_window;
-	}
+	GLFWwindow** getWindow();
 
-
-	
-	void clearScreen();
 
 	void drawFrame();
 
 	void resizeWindow(int width, int height);
 
 	bool isChangingSize = false;
+
 	MVP m_mvp = {};
 	
 	VkClearColorValue m_clearColor = {};
 	
 	VkClearValue m_clearValue = {};
+
 	
-	void setVertices(std::vector<Vertex> v, std::vector<uint32_t> idx)
-	{
-		m_vertices = v;
-		m_indices = idx;
-	}
 
-	void addVertices(const std::vector<Vertex>& v, const std::vector<uint32_t>& idx);
+	VertexBuffer* createVertexBuffer(const std::vector<Vertex>& vertices);
 
-	void updateUniformBuffer(const std::vector<glm::mat4>& boneTransforms);
+	IndexBuffer* createIndexBuffer(const std::vector<uint32_t>& indices);
+
+	TransformationBuffer* createTransformationBuffer();
+
+	DataDescription* createDataDescription(const TransformationBuffer& tBuffer, const Texture& texture);
+
+	void initializeTransformationBuffer(TransformationBuffer& tBuffer, const std::vector<glm::mat4>& transformations);
+
+	void updateTransformationBuffer(TransformationBuffer& tBuffer, const std::vector<glm::mat4>& transformations);
 
 	void init();
+
+	VkDevice getDevice();
+
+	void spawnActor(Actor* actor);
+
+	Texture* createTexture(std::string filePath);
+
+	VkDescriptorPool createDescriptorPool();
+
+	VkDescriptorSetLayout createDescriptorSetLayout();
+
+	std::array<VkDescriptorSet, n_buffers> createDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorPool pool, const TransformationBuffer& tBuffer, const Texture& texture);
+
+
+	
+	
 private:
-
-
 	void createWindow();
 
 	void createInstance();
@@ -119,9 +190,7 @@ private:
 
 	void createCommandBuffers();
 	
-	void recordCommandBuffers();
-	
-	void createSemaphore();
+	void createSemaphoreAndFence();
 
 	std::vector<char> loadShaderBinary(const std::string& filePath);
 
@@ -133,6 +202,8 @@ private:
 
 	void recreateSwapChain();
 
+	uint32_t findSuitableMemType(uint32_t filter, VkMemoryPropertyFlags properties);
+
 	void createBuffer(  VkBuffer& buffer,
 						VkBufferUsageFlags usageFlags,
 						VkDeviceSize size,
@@ -141,24 +212,8 @@ private:
 	
 	void copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
 
-	void createVertexBuffer(const std::vector<Vertex>& vertices);
-
-	void createIndexBuffer(const std::vector<uint32_t>& indices);
-
-	void createUniformBuffer();
-
-	void createDescriptorSetLayout();
-
-	void createDescriptorPool();
-
-	void createDescriptorSets();
-
-
 	void recordCommandBuffer(uint32_t i);
 
-	
-	void createTextureImage();
-	
 	void updateFrame();
 
 	void createImage(VkImage& image, VkDeviceMemory& imageMem, uint32_t width, uint32_t height, uint32_t depth, VkImageType type, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties);
@@ -179,18 +234,12 @@ private:
 
 	VkImageView createImageView(VkImage& image, VkImageAspectFlags aspectMask, VkFormat viewFormat, VkImageViewType viewType);
 
-	void createTextureSampler();
+	VkSampler createTextureSampler();
 
 	void cleanup();
 
-	
-	
-
-
 private:
-	const uint32_t n_buffers = 2;
 	
-
 	uint32_t m_currentRenderingImgIdx = 0;
 
 	uint32_t m_windowWidth;
@@ -240,30 +289,14 @@ private:
 	
 	VkPhysicalDeviceMemoryProperties m_physicalDeviceMemProp;
 
-	uint32_t findSuitableMemType(uint32_t filter, VkMemoryPropertyFlags properties);
+	//VkDescriptorPool m_descriptorSetPool;
 
-	VkBuffer m_vertexBuffer;
+	std::recursive_mutex m_actorLock;
 
-	VkDeviceMemory m_vertexBufferMem;
+	std::vector<Actor*> m_actors = {};
 
-	VkBuffer m_indexBuffer;
-
-	VkDeviceMemory m_indexBufferMem;
-
-	VkDescriptorSetLayout m_descriptorSetLayout;
-
-	VkDescriptorPool m_descriptorSetPool;
-	std::vector<VkDescriptorSet> m_descriptorSets;
-
-	std::vector<VkBuffer> m_uniformBuffers;
-	std::vector<VkDeviceMemory> m_uniformBufferMem;
-
-	VkImage m_textureIamge;
-	VkDeviceMemory m_textureImageMem;
-	VkImageView m_textureImageView;
-
-	VkSampler m_textureSampler;
 };
+
 
 
 #endif

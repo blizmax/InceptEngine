@@ -44,6 +44,8 @@ struct Socket : public Bone
 class Skeleton
 {
 public:
+	static Skeleton* extractSkeletonFromAnimFile(const aiScene* scene, const std::string& rootBoneName);
+
 	std::unordered_map<std::string, Bone> m_bones;
 	
 	bool operator == (const Skeleton& other);
@@ -52,6 +54,7 @@ public:
 
 	bool deleteSocket(std::string name);
 
+	void printBones();
 private:
 	std::unordered_map<std::string, Socket> m_sockets;
 };
@@ -59,6 +62,6 @@ private:
 void traceRootBone(aiNode* curNode, aiNode*& pRootNode, const std::string& rootBoneName);
 
 
-Skeleton extractSkeletonFromAnimFile(const aiScene* scene, const std::string& rootBoneName);
+
 
 #endif
