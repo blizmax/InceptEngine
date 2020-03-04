@@ -2,32 +2,32 @@
 An independent work attemping to implement some components of a game engine from scratch. Use Vulkan API to render, GLM library for math 
 computation, ASSIMP for read FBX data, Fast Noise to generate Perlin noise.
 
-**Enabled Features:**
+**Enabled Features (from new to old):**
 
-  * Indexed rendering
-  
-  * Base color texture
-  
-  * Point light with ambient and specular
-  
-  * Character control
-  
-  * Camera control and follow character
-  
-  * Load model to scene
-  
-  * Load skeleton hierarchy, bone information, and key framing animation data
-  
-  * Play skeleton animation
-  
-  * IK animation of the right arm of the character, using FABRIK algorithm
-  
-  * Socket system such that actor can be attached to a socket or bone so that the attachment will move
+* Randomly generating terrain using Perlin Noise and rendering using Marching Cube
+
+* Marching Cube algorithm for rendering predefined surface
+
+* IK animation of the right arm of the character, using FABRIK algorithm
+
+* Socket system which enables actors to be attached to a socket or bone so that the attached actor will move
   with its parent
-  
-  * Marching Cube algorithm for rendering predefined surface
-  
-  * Randomly generating terrain using Perlin Noise and rendering using Marching Cube
+    
+* Play skeleton animation
+      
+* Load skeleton hierarchy, bone information, and key framing animation data
+
+* Load model to scene
+
+* Camera control and follow character
+
+* Character control
+
+* Point light with ambient and specular
+
+* Base color texture
+
+* Indexed rendering
 
 
 
