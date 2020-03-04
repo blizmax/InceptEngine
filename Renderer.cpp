@@ -4,13 +4,14 @@
 #include "stb_image.h"
 #include "Actor.h"
 #include "SkeletonMesh.h"
+#include "Light.h"
 
-DataDescription* Renderer::createDataDescription(const TransformationBuffer& tBuffer, const Texture& texture)
+DataDescription* Renderer::createDataDescription(const UniformBuffer& uBuffer, const Texture& texture)
 {
 	DataDescription* desc = new DataDescription(this);
 	desc->m_pool = createDescriptorPool();
 	desc->m_layout = createDescriptorSetLayout();
-	desc->m_descriptorSet = createDescriptorSet(desc->m_layout, desc->m_pool, tBuffer, texture);
+	desc->m_descriptorSet = createDescriptorSet(desc->m_layout, desc->m_pool, uBuffer, texture);
 	return desc;
 }
 
@@ -652,7 +653,7 @@ void Renderer::createGraphicsPipeline()
 	rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 	rasterizationStateCreateInfo.lineWidth = 1.0f;
 	//two-sided or single-sided of the material
-	rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
 	rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
 
@@ -660,7 +661,7 @@ void Renderer::createGraphicsPipeline()
 	multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
 	multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-
+	
 	VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
 	colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	colorBlendAttachmentState.blendEnable = VK_FALSE;
@@ -891,10 +892,7 @@ IndexBuffer* Renderer::createIndexBuffer(const std::vector<uint32_t>& indices)
 }
 
 
-void Renderer::updateFrame()
-{
 
-}
 
 void Renderer::createImage(VkImage& image, VkDeviceMemory& imageMem, uint32_t width, uint32_t height, uint32_t depth, VkImageType type, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties)
 {
@@ -1002,7 +1000,7 @@ VkDescriptorSetLayout Renderer::createDescriptorSetLayout()
 {
 	VkDescriptorSetLayout layout;
 
-	std::array<VkDescriptorSetLayoutBinding, 2> descSetLayoutBinding = {};
+	std::array<VkDescriptorSetLayoutBinding, 3> descSetLayoutBinding = {};
 	descSetLayoutBinding[0].binding = 0;
 	descSetLayoutBinding[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	descSetLayoutBinding[0].descriptorCount = 1;
@@ -1014,6 +1012,12 @@ VkDescriptorSetLayout Renderer::createDescriptorSetLayout()
 	descSetLayoutBinding[1].descriptorCount = 1;
 	descSetLayoutBinding[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 	descSetLayoutBinding[1].pImmutableSamplers = nullptr;
+
+	descSetLayoutBinding[2].binding = 2;
+	descSetLayoutBinding[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	descSetLayoutBinding[2].descriptorCount = 1;
+	descSetLayoutBinding[2].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	descSetLayoutBinding[2].pImmutableSamplers = nullptr;
 
 	
 	VkDescriptorSetLayoutCreateInfo layoutCreateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
@@ -1033,12 +1037,15 @@ VkDescriptorSetLayout Renderer::createDescriptorSetLayout()
 VkDescriptorPool Renderer::createDescriptorPool()
 {
 	VkDescriptorPool pool;
-	std::array<VkDescriptorPoolSize, 2> descPoolSzie = {};
+	std::array<VkDescriptorPoolSize, 3> descPoolSzie = {};
 	descPoolSzie[0].descriptorCount = n_buffers;
 	descPoolSzie[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
 	descPoolSzie[1].descriptorCount = n_buffers;
 	descPoolSzie[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+
+	descPoolSzie[2].descriptorCount = n_buffers;
+	descPoolSzie[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
 
 	VkDescriptorPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
@@ -1057,42 +1064,54 @@ VkDescriptorPool Renderer::createDescriptorPool()
 
 
 
-TransformationBuffer* Renderer::createTransformationBuffer()
+UniformBuffer* Renderer::createUniformBuffer()
 {
-	TransformationBuffer* tBuffer = new TransformationBuffer(this);
+	UniformBuffer* uBuffer = new UniformBuffer(this);
 
-	VkDeviceSize size = sizeof(glm::mat4) * MAX_BONE_PER_SKELETON + sizeof(glm::mat4) * 2;
-
+	VkDeviceSize boneTransformSize = sizeof(glm::mat4) * MAX_BONE_PER_SKELETON + sizeof(glm::mat4) * 2;
+	VkDeviceSize lightPropertySize = sizeof(Light);
 
 	for (unsigned int i = 0; i < n_buffers; i++)
 	{
-		createBuffer(tBuffer->m_ubo[i], VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, size, tBuffer->m_uboMemory[i], VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		createBuffer(uBuffer->m_boneTransform[i], VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, boneTransformSize, uBuffer->m_boneTransformMemory[i], VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		createBuffer(uBuffer->m_light[i], VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, lightPropertySize, uBuffer->m_lightMemory[i], VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	}
-	return tBuffer;
+	return uBuffer;
 }
 
 
 
-void Renderer::updateTransformationBuffer(TransformationBuffer& tBuffer, const std::vector<glm::mat4>& transformations)
+void Renderer::updateUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm::mat4>& transformations, Light* light)
 {
 	//change the buffer of the image that is not being rendered now
 
 	auto transformCopy = transformations;
 
-	void* data = nullptr;
-
 	unsigned int writeToImageIdx = m_currentRenderingImgIdx ^ 1;
 
-	vkMapMemory(m_device, tBuffer.m_uboMemory[writeToImageIdx], 0, sizeof(glm::mat4) * transformations.size(), 0, &data);
+
+	void* data = nullptr;
+
+	vkMapMemory(m_device, uBuffer.m_boneTransformMemory[writeToImageIdx], 0, sizeof(glm::mat4) * transformations.size(), 0, &data);
 
 	memcpy(data, transformCopy.data(), sizeof(glm::mat4) * transformations.size());
 
-	vkUnmapMemory(m_device, tBuffer.m_uboMemory[writeToImageIdx]);
+	vkUnmapMemory(m_device, uBuffer.m_boneTransformMemory[writeToImageIdx]);
+
+	if (light != nullptr)
+	{
+		data = nullptr;
+
+		vkMapMemory(m_device, uBuffer.m_lightMemory[writeToImageIdx], 0, sizeof(Light), 0, &data);
+		memcpy(data, light, sizeof(Light));
+		vkUnmapMemory(m_device, uBuffer.m_lightMemory[writeToImageIdx]);
+	}
+
 
 }
 
 //this function is different from the previous one by that it modified all of ubo in tBuffer
-void Renderer::initializeTransformationBuffer(TransformationBuffer& tBuffer, const std::vector<glm::mat4>& transformations)
+void Renderer::initializeUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm::mat4>& transformations, Light* light)
 {
 	//change the buffer of the image that is not being rendered now
 
@@ -1102,11 +1121,22 @@ void Renderer::initializeTransformationBuffer(TransformationBuffer& tBuffer, con
 	{
 		void* data = nullptr;
 
-		vkMapMemory(m_device, tBuffer.m_uboMemory[i], 0, sizeof(glm::mat4) * transformations.size(), 0, &data);
+		vkMapMemory(m_device, uBuffer.m_boneTransformMemory[i], 0, sizeof(glm::mat4) * transformations.size(), 0, &data);
 
 		memcpy(data, transformCopy.data(), sizeof(glm::mat4) * transformations.size());
 
-		vkUnmapMemory(m_device, tBuffer.m_uboMemory[i]);
+		vkUnmapMemory(m_device, uBuffer.m_boneTransformMemory[i]);
+
+		if (light != nullptr)
+		{
+			data = nullptr;
+
+			vkMapMemory(m_device, uBuffer.m_lightMemory[i], 0, sizeof(Light), 0, &data);
+
+			memcpy(data, light, sizeof(Light));
+
+			vkUnmapMemory(m_device, uBuffer.m_lightMemory[i]);
+		}
 	}
 
 
@@ -1262,7 +1292,7 @@ void Renderer::cleanup()
 
 
 
-std::array<VkDescriptorSet, n_buffers> Renderer::createDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorPool pool, const TransformationBuffer& tBuffer, const Texture& texture)
+std::array<VkDescriptorSet, n_buffers> Renderer::createDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorPool pool, const UniformBuffer& uBuffer, const Texture& texture)
 {
 	std::array<VkDescriptorSet, n_buffers> set;
 
@@ -1283,24 +1313,29 @@ std::array<VkDescriptorSet, n_buffers> Renderer::createDescriptorSet(VkDescripto
 
 	for (uint32_t i = 0; i < n_buffers; i++)
 	{
-		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.offset = 0;
-		bufferInfo.buffer = tBuffer.m_ubo[i];
-		bufferInfo.range = VK_WHOLE_SIZE;
+		VkDescriptorBufferInfo boneTransformBufferInfo = {};
+		boneTransformBufferInfo.offset = 0;
+		boneTransformBufferInfo.buffer = uBuffer.m_boneTransform[i];
+		boneTransformBufferInfo.range = VK_WHOLE_SIZE;
+
+		VkDescriptorBufferInfo lightInfo = {};
+		lightInfo.offset = 0;
+		lightInfo.buffer = uBuffer.m_light[i];
+		lightInfo.range = VK_WHOLE_SIZE;
 
 		VkDescriptorImageInfo imageInfo = {};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		imageInfo.imageView = texture.m_view;
 		imageInfo.sampler = texture.m_sampler;
 
-		std::array<VkWriteDescriptorSet, 2> writeDescSet = {};
+		std::array<VkWriteDescriptorSet, 3> writeDescSet = {};
 		writeDescSet[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		writeDescSet[0].descriptorCount = 1;
 		writeDescSet[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		writeDescSet[0].dstArrayElement = 0;
 		writeDescSet[0].dstBinding = 0;
 		writeDescSet[0].dstSet = set[i];
-		writeDescSet[0].pBufferInfo = &bufferInfo;
+		writeDescSet[0].pBufferInfo = &boneTransformBufferInfo;
 
 		writeDescSet[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		writeDescSet[1].descriptorCount = 1;
@@ -1310,10 +1345,23 @@ std::array<VkDescriptorSet, n_buffers> Renderer::createDescriptorSet(VkDescripto
 		writeDescSet[1].dstSet = set[i];
 		writeDescSet[1].pImageInfo = &imageInfo;
 
+		writeDescSet[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeDescSet[2].descriptorCount = 1;
+		writeDescSet[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		writeDescSet[2].dstArrayElement = 0;
+		writeDescSet[2].dstBinding = 2;
+		writeDescSet[2].dstSet = set[i];
+		writeDescSet[2].pBufferInfo = &lightInfo;
+
 		vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(writeDescSet.size()), writeDescSet.data(), 0, nullptr);
 	}
 
 	return set;
+}
+
+size_t Renderer::getNumActors()
+{
+	return m_actors.size();
 }
 
 uint32_t Renderer::findSuitableMemType(uint32_t filter, VkMemoryPropertyFlags properties)
@@ -1381,18 +1429,21 @@ Texture::~Texture()
 	vkDestroySampler(m_renderer->getDevice(), m_sampler, nullptr);
 }
 
-TransformationBuffer::TransformationBuffer(Renderer* renderer)
+UniformBuffer::UniformBuffer(Renderer* renderer)
 {
 	m_renderer = renderer;
 }
 
-TransformationBuffer::~TransformationBuffer()
+UniformBuffer::~UniformBuffer()
 {
 	vkDeviceWaitIdle(m_renderer->getDevice());
 	for (unsigned int i = 0; i < n_buffers; i++)
 	{
-		vkDestroyBuffer(m_renderer->getDevice(), m_ubo[i], nullptr);
-		vkFreeMemory(m_renderer->getDevice(), m_uboMemory[i], nullptr);
+		vkDestroyBuffer(m_renderer->getDevice(), m_boneTransform[i], nullptr);
+		vkFreeMemory(m_renderer->getDevice(), m_boneTransformMemory[i], nullptr);
+
+		vkDestroyBuffer(m_renderer->getDevice(), m_light[i], nullptr);
+		vkFreeMemory(m_renderer->getDevice(), m_lightMemory[i], nullptr);
 	}
 }
 

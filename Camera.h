@@ -15,6 +15,7 @@ public:
 	void rotateHorizontal(float degree);
 	void rotateVertical(float degree);
 	void printCameraPramameter();
+	void lightUp(float amount);
 
 private:
 

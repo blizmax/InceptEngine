@@ -2,10 +2,10 @@
 #include "Renderer.h"
 #include "Animation.h"
 #include "Skeleton.h"
+#include "Global.h"
 
-SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::string texturePath, Skeleton* skeleton, glm::mat4 rootTransform)
+SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::string texturePath, Skeleton* skeleton)
 {
-	m_rootTransform = rootTransform;
 
 	m_vertexBuffer = renderer->createVertexBuffer(vertices);
 
@@ -17,9 +17,9 @@ SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertic
 
 	m_skeleton = skeleton;
 
-	m_tBuffer = renderer->createTransformationBuffer(); //just allocate the buffer, no data binding now
+	m_uBuffer = renderer->createUniformBuffer(); //just allocate the buffer, no data binding now
 
-	m_dataDesc = renderer->createDataDescription(*m_tBuffer, *m_texture);
+	m_dataDesc = renderer->createDataDescription(*m_uBuffer, *m_texture);
 
 	m_currentAnimation = nullptr;
 }
@@ -38,9 +38,9 @@ SkeletonMesh::~SkeletonMesh()
 	{
 		delete m_texture;
 	}
-	if (m_tBuffer != nullptr)
+	if (m_uBuffer != nullptr)
 	{
-		delete m_tBuffer;
+		delete m_uBuffer;
 	}
 	if (m_dataDesc != nullptr)
 	{
@@ -77,33 +77,8 @@ void SkeletonMesh::addBoneToVertex(std::vector<Vertex>& vertices, unsigned int b
 	vertices[vertexID].boneWeights[minIdx] = weights;
 	vertices[vertexID].affectedBonesID[minIdx] = boneID;
 }
-/*
-void SkeletonMesh::setProperties(Renderer* renderer, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, std::string texturePath)
-{
-	if (renderer == nullptr)
-	{
-		throw std::runtime_error("");
-	}
 
-	if (vertices != nullptr)
-	{
-		if (m_vertexBuffer != nullptr)
-		{
-			delete m_vertexBuffer;
-		}
-		m_vertexBuffer = renderer->createVertexBuffer(*vertices);
-		n_indices = static_cast<uint32_t>(indices->size());
-	}
 
-	if (indices != nullptr)
-	{
-		if (m_indexBuffer != nullptr)
-		{
-			delete m_indexBuffer;
-		}
-		m_indexBuffer = renderer->createIndexBuffer(*indices);
-	}
-}*/
 
 VkBuffer* SkeletonMesh::getMeshVerticesBuffer()
 {
@@ -134,19 +109,22 @@ VkDescriptorSet* SkeletonMesh::getDescritorset(int i)
 	return &m_dataDesc->m_descriptorSet[i];
 }
 
-void SkeletonMesh::initializeTransformationBuffer(Renderer* renderer, const std::vector<glm::mat4>& transformations)
+void SkeletonMesh::initializeUniformBuffer(Renderer* renderer, const std::vector<glm::mat4>& transformations, Light* light)
 {
-	if (m_tBuffer == nullptr)
+	if (m_uBuffer == nullptr)
 	{
+		std::cerr << "Buffer not being created yet" << std::endl;
 		throw std::runtime_error("");
 	}
-	renderer->initializeTransformationBuffer(*m_tBuffer, transformations);
+	renderer->initializeUniformBuffer(*m_uBuffer, transformations, light);
 }
 
-void SkeletonMesh::updateTransformationBuffer(Renderer* renderer, const std::vector<glm::mat4>& transformations)
+void SkeletonMesh::updateUniformBuffer(Renderer* renderer, const std::vector<glm::mat4>& transformations, Light* light)
 {
-	renderer->updateTransformationBuffer(*m_tBuffer, transformations);
+	renderer->updateUniformBuffer(*m_uBuffer, transformations, light);
 }
+
+
 
 void printModelStats(const aiScene* scene)
 {
@@ -159,7 +137,7 @@ void printModelStats(const aiScene* scene)
 
 }
 
-SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::string& filepath, std::string texturePath, const std::string& rootBoneName)
+SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::string& filepath, std::string texturePath, const std::string& rootBoneName, bool importAllMesh)
 {
 
 	Assimp::Importer importer;
@@ -187,28 +165,40 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 	aiMesh* mesh = scene->mMeshes[0];
 
 	std::vector<Vertex> vertices;
-	bool hasTextureCoords = mesh->HasTextureCoords(0);
+
 
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex v;
-		v.position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1 };
+		v.position = FBX_Import_Mesh_Root_Transformation * glm::vec4( mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1 );
 		
 		if (mesh->HasVertexColors(i))
 		{
 			v.color = { mesh->mColors[i][0].r, mesh->mColors[i][0].g, mesh->mColors[i][0].b, 1.0 };
 			std::cout << i << std::endl;
 		}
-		else
+
+		if (mesh->HasNormals())
 		{
-			v.color = { 0.0, 0.0, 0.0, 1.0 };
+			v.vertexNormal = FBX_Import_Mesh_Root_Transformation * glm::vec4(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z, 0);
+			v.vertexNormal = glm::normalize(v.vertexNormal);
 		}
 
-		if (hasTextureCoords)
-		{
-			v.texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y, mesh->mTextureCoords[0][i].z };
-		}
 
+
+		for (unsigned int j = 0; j < AI_MAX_NUMBER_OF_TEXTURECOORDS; j++)
+		{
+			if (mesh->HasTextureCoords(j))
+			{
+				if (j != 0)
+				{
+					std::cout << i << std::endl;
+				}
+				v.texCoord = { mesh->mTextureCoords[j][i].x, mesh->mTextureCoords[j][i].y, mesh->mTextureCoords[j][i].z };
+				break;
+			}
+		}
+		
 		vertices.push_back(v);
 	}
 
@@ -224,27 +214,33 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 	}
 	assert(indices.size() % 3 == 0);
 
-	Skeleton* skeleton = Skeleton::extractSkeletonFromAnimFile(scene, rootBoneName);
 
-	for (unsigned int i = 0; i < mesh->mNumBones; i++)
+	Skeleton* skeleton = nullptr;
+	if (rootBoneName != "")
 	{
-		if (skeleton->m_bones.count(mesh->mBones[i]->mName.C_Str()) == 0)
+		skeleton = Skeleton::extractSkeletonFromAnimFile(scene, rootBoneName);
+
+		for (unsigned int i = 0; i < mesh->mNumBones; i++)
 		{
-			throw std::runtime_error("");
+			if (skeleton->m_bones.count(mesh->mBones[i]->mName.C_Str()) == 0)
+			{
+				throw std::runtime_error("");
+			}
+		}
+
+		for (unsigned int i = 0; i < mesh->mNumBones; i++)
+		{
+			std::string curBoneName = mesh->mBones[i]->mName.C_Str();
+			unsigned int curBoneID = skeleton->m_bones.at(curBoneName).m_boneId;
+			for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++)
+			{
+				float weight = mesh->mBones[i]->mWeights[j].mWeight;
+				unsigned int affectedVertexId = mesh->mBones[i]->mWeights[j].mVertexId;
+				addBoneToVertex(vertices, curBoneID, affectedVertexId, weight);
+			}
 		}
 	}
-
-	for (unsigned int i = 0; i < mesh->mNumBones; i++)
-	{
-		std::string curBoneName = mesh->mBones[i]->mName.C_Str();
-		unsigned int curBoneID = skeleton->m_bones.at(curBoneName).m_boneId;
-		for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++)
-		{
-			float weight = mesh->mBones[i]->mWeights[j].mWeight;
-			unsigned int affectedVertexId = mesh->mBones[i]->mWeights[j].mVertexId;
-			addBoneToVertex(vertices, curBoneID, affectedVertexId, weight);
-		}
-	}
+	
 
 	
 	return new SkeletonMesh(renderer, vertices, indices, texturePath, skeleton);

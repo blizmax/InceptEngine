@@ -26,6 +26,7 @@ const uint32_t n_buffers = 2;
 
 class Actor;
 
+struct Light;
 
 struct MVP
 {
@@ -83,13 +84,16 @@ struct Texture
 //the second mat4 is the model transformation matrix
 //the last 198 matrix are the bone transformation matrices
 
-struct TransformationBuffer
+struct UniformBuffer
 {
-	TransformationBuffer(Renderer* renderer);
-	~TransformationBuffer();
+	UniformBuffer(Renderer* renderer);
+	~UniformBuffer();
 	Renderer* m_renderer;
-	std::array<VkBuffer, n_buffers> m_ubo;
-	std::array<VkDeviceMemory, n_buffers> m_uboMemory;
+	std::array<VkBuffer, n_buffers> m_boneTransform;
+	std::array<VkDeviceMemory, n_buffers> m_boneTransformMemory;
+	std::array<VkBuffer, n_buffers> m_light;
+	std::array<VkDeviceMemory, n_buffers> m_lightMemory;
+
 };
 
 //this struct wrap up the vkdescriptor creation
@@ -138,13 +142,13 @@ public:
 
 	IndexBuffer* createIndexBuffer(const std::vector<uint32_t>& indices);
 
-	TransformationBuffer* createTransformationBuffer();
+	UniformBuffer* createUniformBuffer();
 
-	DataDescription* createDataDescription(const TransformationBuffer& tBuffer, const Texture& texture);
+	DataDescription* createDataDescription(const UniformBuffer& uBuffer, const Texture& texture);
 
-	void initializeTransformationBuffer(TransformationBuffer& tBuffer, const std::vector<glm::mat4>& transformations);
+	void initializeUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm::mat4>& transformations, Light* light);
 
-	void updateTransformationBuffer(TransformationBuffer& tBuffer, const std::vector<glm::mat4>& transformations);
+	void updateUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm::mat4>& transformations, Light* light);
 
 	void init();
 
@@ -158,9 +162,9 @@ public:
 
 	VkDescriptorSetLayout createDescriptorSetLayout();
 
-	std::array<VkDescriptorSet, n_buffers> createDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorPool pool, const TransformationBuffer& tBuffer, const Texture& texture);
+	std::array<VkDescriptorSet, n_buffers> createDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorPool pool, const UniformBuffer& uBuffer, const Texture& texture);
 
-
+	size_t getNumActors();
 	
 	
 private:
@@ -213,8 +217,6 @@ private:
 	void copyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
 
 	void recordCommandBuffer(uint32_t i);
-
-	void updateFrame();
 
 	void createImage(VkImage& image, VkDeviceMemory& imageMem, uint32_t width, uint32_t height, uint32_t depth, VkImageType type, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties);
 

@@ -1,4 +1,6 @@
 #include "Skeleton.h"
+#include "Global.h"
+
 
 bool Skeleton::operator==(const Skeleton& other)
 {
@@ -35,7 +37,7 @@ bool Skeleton::addSocket(std::string parent, std::string socketName)
 	socket.m_name = socketName;
 	socket.m_offset = pParent->m_offset;
 	socket.m_parent = parent;
-	socket.m_transformToParent = glm::mat4(1.0);
+	socket.m_bindPoseTransformToParent = glm::mat4(1.0);
 
 	m_sockets.insert(std::pair(socketName, socket));
 	return true;
@@ -110,7 +112,15 @@ Skeleton* Skeleton::extractSkeletonFromAnimFile(const aiScene* scene, const std:
 	unsigned int currentID = 2;
 	Bone rootBone(pRootBone->mName.C_Str(), "", glm::mat4(1.0));
 	rootBone.m_boneId = currentID;
+	rootBone.m_lengthToParent = 0.0f;
+
+	for (unsigned int i = 0; i < pRootBone->mNumChildren; i++)
+	{
+		rootBone.m_children.push_back(pRootBone->mChildren[i]->mName.C_Str());
+	}
 	currentID++;
+
+
 	skeleton->m_bones.insert(std::pair(pRootBone->mName.C_Str(), rootBone));
 
 	nodes.push(pRootBone);
@@ -123,6 +133,11 @@ Skeleton* Skeleton::extractSkeletonFromAnimFile(const aiScene* scene, const std:
 		{
 			aiNode* child = currentNode->mChildren[i];
 			Bone bone(child->mName.C_Str(), currentNode->mName.C_Str(), mat4_cast(child->mTransformation));
+			bone.m_lengthToParent = glm::length(bone.m_bindPoseTransformToParent * glm::vec4(0, 0, 0, 1));
+			for (unsigned int j = 0; j < child->mNumChildren; j++)
+			{
+				bone.m_children.push_back(child->mChildren[j]->mName.C_Str());
+			}
 			bone.m_boneId = currentID;
 			currentID++;
 			skeleton->m_bones.insert(std::pair(child->mName.C_Str(), bone));
@@ -136,7 +151,11 @@ Skeleton* Skeleton::extractSkeletonFromAnimFile(const aiScene* scene, const std:
 		{
 			aiBone* curBone = scene->mMeshes[0]->mBones[i];
 			std::string boneName = curBone->mName.C_Str();
-			skeleton->m_bones.at(boneName).m_offset = mat4_cast(curBone->mOffsetMatrix);
+
+			auto worldTransformation = FBX_Import_Mesh_Root_Transformation * glm::inverse(mat4_cast(curBone->mOffsetMatrix));
+			auto worldTransformationInv = glm::inverse(worldTransformation);
+			skeleton->m_bones.at(boneName).m_offset = worldTransformationInv;
+			skeleton->m_bones.at(boneName).m_bindPoseWorldTransform = worldTransformation;
 		}
 	}
 
@@ -146,13 +165,18 @@ Skeleton* Skeleton::extractSkeletonFromAnimFile(const aiScene* scene, const std:
 
 Bone::Bone()
 {
+	m_lengthToParent = 0;
+	m_children = {};
+	m_worldCoord = glm::mat4(1.0);
 }
 
 Bone::Bone(std::string boneName, std::string parent, glm::mat4 transformation)
 {
 	m_name = boneName;
 	m_parent = parent;
-	m_transformToParent = transformation;
+	m_bindPoseTransformToParent = transformation;
+	m_children = {};
+	m_worldCoord = glm::mat4(1.0);
 }
 
 Socket::Socket()

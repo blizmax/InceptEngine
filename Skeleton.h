@@ -26,8 +26,15 @@ struct Bone
 
 	glm::mat4 m_offset;
 
-	glm::mat4 m_transformToParent;
+	glm::mat4 m_bindPoseWorldTransform;
 
+	glm::mat4 m_bindPoseTransformToParent;
+
+	float m_lengthToParent;
+
+	glm::mat4 m_worldCoord;
+
+	std::vector<std::string> m_children;
 
 	Bone();
 

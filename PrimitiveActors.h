@@ -6,11 +6,12 @@
 
 
 class Renderer;
+struct Light;
 
 class Plane : public Actor
 {
 public:
-	Plane(Renderer* renderer, std::string texturePath);
+	Plane(Renderer* renderer, std::string texturePath, Light* light);
 
 private:
 	

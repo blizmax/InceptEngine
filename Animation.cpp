@@ -1,5 +1,5 @@
 #include "Animation.h"
-
+#include "Global.h"
 Animation* loadAnimation(const std::string& filepath, SkeletonMesh* mesh, std::string rootBoneName)
 {
 	Assimp::Importer importer;
@@ -143,7 +143,7 @@ std::vector<glm::mat4> getBonesTransformation(const Skeleton& skeleton, const An
 			currentBone = &skeleton.m_bones.at(currentBone->m_parent);
 		}
 
-		boneTransAfterProp[boneID] = finalTrans;
+		boneTransAfterProp[boneID] = anim.m_rootTransform * finalTrans;
 	}
 
 
@@ -194,4 +194,9 @@ void cleanAnimation(Animation* anim, std::string rootName)
 		anim->m_animation.erase(scaleName);
 		anim->m_animation.insert(std::pair(timeline.m_boneName, timeline));
 	}
+}
+
+Animation::Animation()
+{
+	m_rootTransform = FBX_Import_Mesh_Root_Transformation;
 }

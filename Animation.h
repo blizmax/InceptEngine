@@ -3,7 +3,6 @@
 
 #include "Skeleton.h"
 #include "SkeletonMesh.h"
-
 #include <chrono>
 
 class ScaleKeyFrame
@@ -68,9 +67,13 @@ public:
 class Animation
 {
 public:
+	Animation();
+
 	float m_tickPerSecond = 0;
 
 	float m_duration = 0;
+
+	glm::mat4 m_rootTransform;
 
 	std::unordered_map<std::string, BoneTransformTimeline> m_animation;
 };

@@ -13,7 +13,10 @@ Camera::Camera(Actor* owner, glm::vec4 position, glm::vec4 forward)
 
 glm::mat4 Camera::cameraMatrix()
 {
-	auto ownerFrame = m_owner->m_localFrame.getLocalFrame();
+	auto ownerFrame = m_owner->getActorTransformation();
+
+
+
 	auto worldPosition = ownerFrame * m_position;
 	auto worldForward = ownerFrame * m_forwardPoint;
 
@@ -39,4 +42,10 @@ void Camera::printCameraPramameter()
 {
 	std::cout << "position: " << glm::to_string(m_position) << std::endl;
 	std::cout << "position: " << glm::to_string(m_forwardPoint) << std::endl;
+}
+
+void Camera::lightUp(float amount)
+{
+	m_position.y += amount;
+	m_forwardPoint.y += amount;
 }

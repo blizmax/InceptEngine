@@ -1,8 +1,8 @@
 #include "Player.h"
 #include "Camera.h"
 
-Player::Player(glm::mat4 rootTransformation)
-	:Actor{ rootTransformation }
+Player::Player(glm::mat4 startTransformation)
+	:Actor{ startTransformation }
 {
 	m_cam = nullptr;
 	m_capsule = nullptr;

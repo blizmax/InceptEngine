@@ -16,6 +16,8 @@ struct LocalFrame
 	glm::vec4 O = { 0,0,0,1 };
 
 	glm::mat4 getLocalFrame();
+	//void setLocalFrame();
+
 
 	void translate(glm::vec3 direction, float amount);
 	void rotate(glm::vec3 axis, float degree);
@@ -31,23 +33,32 @@ struct Socket;
 class Actor
 {
 public:
-	Actor(glm::mat4 rootTransform = glm::mat4(1.0));
-
-	LocalFrame m_localFrame;
+	Actor(glm::mat4 startTransformation);
 
 	void setSkeletonMesh(SkeletonMesh* mesh);
 
 	SkeletonMesh* getSkeletonMesh();
 
+	void setActorTransformation(glm::mat4 t);
 
-	void setRootTransform(glm::mat4 t);
+	glm::mat4 getActorTransformation();
 
-	glm::mat4 getModelTransformation()
-	{
-		return m_localFrame.getLocalFrame() * m_rootTransform;
-	}
+	void translate(glm::vec3 direction, float amount);
+	void rotate(glm::vec3 axis, float degree);
+	void rotate(glm::vec4 axis, float degree);
+	void scale(glm::vec3 scale);
+
+	glm::vec4 getForwardVector();
+
+	glm::vec4 getRightWardVector();
+
+	glm::vec4 getUpWardVector();
+
+	glm::vec4 getActorLocation();
 
 	~Actor();
+
+
 
 private:
 	SkeletonMesh* m_mesh;
@@ -58,7 +69,7 @@ private:
 
 	std::string name;
 
-	glm::mat4 m_rootTransform;
+	LocalFrame m_localFrame;
 };
 
 #endif
