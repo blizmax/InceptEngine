@@ -14,20 +14,22 @@ struct UniformBuffer;
 struct DataDescription;
 class Skeleton;
 struct Light;
+struct Pipeline;
+struct ShaderPath;
+struct CubeMap;
+
 
 class SkeletonMesh
 {
 public:
-	SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::string texturePath, Skeleton* skeleton);
+	SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string texturePath, Skeleton* skeleton);
+
+	SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string cubemapPath[6]);
 
 	~SkeletonMesh();
 
-	//std::vector<Vertex> m_vertices = {};
 
-	//std::vector<uint32_t> m_indices = {};
-
-	
-	static SkeletonMesh* loadSkeletonMesh(Renderer* renderer, const std::string& filepath, std::string texturePath, const std::string& rootBoneName, bool importAllMesh);
+	static SkeletonMesh* loadSkeletonMesh(Renderer* renderer, const std::string& filepath, ShaderPath shaderpath, std::string texturePath, const std::string& rootBoneName, bool importAllMesh);
 	
 
 	VkBuffer* getMeshVerticesBuffer();
@@ -41,6 +43,8 @@ public:
 	void playAnimation();
 
 	VkDescriptorSet* getDescritorset(int i);
+
+	Pipeline* getPipeline();
 
 	void initializeUniformBuffer(Renderer* renderer, const std::vector<glm::mat4>& transformations, Light* light);
 
@@ -60,9 +64,13 @@ private:
 
 	Texture* m_texture;
 
+	CubeMap* m_cubemap;
+
 	UniformBuffer* m_uBuffer;
 
 	DataDescription* m_dataDesc;
+
+	Pipeline* m_pipeline;
 
 	Skeleton* m_skeleton;
 

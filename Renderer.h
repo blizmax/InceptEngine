@@ -24,6 +24,8 @@
 #define PRESENT_QUEUE "presentQueue"
 const uint32_t n_buffers = 2;
 
+class Renderer;
+
 class Actor;
 
 struct Light;
@@ -46,7 +48,14 @@ struct QueueFamilyIndices
 	}
 };
 
-class Renderer;
+
+enum class RenderObjectType
+{
+	SkeletonMesh,
+	Skybox,
+	Terrain
+};
+
 
 struct VertexBuffer
 {
@@ -67,6 +76,21 @@ struct IndexBuffer
 	VkDeviceMemory m_indexBufferMemory;
 };
 
+struct ShaderPath
+{
+	std::string vertexShaderPath;
+	std::string fragmentShaderPath;
+};
+
+struct Pipeline
+{
+	Pipeline(Renderer* renderer);
+	~Pipeline();
+	Renderer* m_renderer;
+	VkPipeline m_pipeline;
+	VkPipelineLayout m_pipelineLayout;
+};
+
 struct Texture
 {
 	Texture(Renderer* renderer);
@@ -79,6 +103,18 @@ struct Texture
 };
 
 
+struct CubeMap
+{
+	CubeMap(Renderer* renderer);
+	~CubeMap();
+	Renderer* m_renderer;
+
+	VkImage m_cubeMapImage;
+	VkDeviceMemory m_cubeMapImageMemory;
+	VkImageView m_view;
+	VkSampler m_sampler;
+};
+
 //the transformation buffer, by design, is a vulkan uniform buffer of array of 200 glm::mat4
 //the first mat4 is always identity, for the usage of static mesh
 //the second mat4 is the model transformation matrix
@@ -89,8 +125,10 @@ struct UniformBuffer
 	UniformBuffer(Renderer* renderer);
 	~UniformBuffer();
 	Renderer* m_renderer;
+
 	std::array<VkBuffer, n_buffers> m_boneTransform;
 	std::array<VkDeviceMemory, n_buffers> m_boneTransformMemory;
+
 	std::array<VkBuffer, n_buffers> m_light;
 	std::array<VkDeviceMemory, n_buffers> m_lightMemory;
 
@@ -115,18 +153,20 @@ class Renderer
 
 public:
 
-
-
 	Renderer();
 
 	~Renderer();
 
 	GLFWwindow** getWindow();
 
+	VkDescriptorSetLayout createSkyboxDescriptorSetLayout();
+
+	std::array<VkDescriptorSet, n_buffers> createSkyboxDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorPool pool, const UniformBuffer& uBuffer, const CubeMap& cubemap);
+
+	DataDescription* createSkyboxDataDescription(const UniformBuffer& uBuffer, const CubeMap& cubemap);
 
 	void drawFrame();
 
-	void resizeWindow(int width, int height);
 
 	bool isChangingSize = false;
 
@@ -136,8 +176,6 @@ public:
 	
 	VkClearValue m_clearValue = {};
 
-	
-
 	VertexBuffer* createVertexBuffer(const std::vector<Vertex>& vertices);
 
 	IndexBuffer* createIndexBuffer(const std::vector<uint32_t>& indices);
@@ -145,6 +183,10 @@ public:
 	UniformBuffer* createUniformBuffer();
 
 	DataDescription* createDataDescription(const UniformBuffer& uBuffer, const Texture& texture);
+
+	Pipeline* createPipeline(ShaderPath shaderpath, DataDescription* dataDesc);
+
+	CubeMap* createCubeMap(std::string texturePaths[6]);
 
 	void initializeUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm::mat4>& transformations, Light* light);
 
@@ -200,11 +242,10 @@ private:
 
 	VkShaderModule loadShaderModule(const std::string& filePath);
 	
-	void createGraphicsPipeline();
+	
 
 	void cleaupSwapChain();
 
-	void recreateSwapChain();
 
 	uint32_t findSuitableMemType(uint32_t filter, VkMemoryPropertyFlags properties);
 
@@ -218,23 +259,37 @@ private:
 
 	void recordCommandBuffer(uint32_t i);
 
-	void createImage(VkImage& image, VkDeviceMemory& imageMem, uint32_t width, uint32_t height, uint32_t depth, VkImageType type, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties);
+	void createImage(VkImage& image, 
+		VkDeviceMemory& imageMem, 
+		uint32_t width, 
+		uint32_t height, 
+		uint32_t depth, 
+		uint32_t arrayLayers, 
+		uint32_t mipLevels, 
+		VkImageCreateFlags flags, 
+		VkImageType type, 
+		VkFormat format, 
+		VkImageTiling tiling, 
+		VkImageUsageFlags usage, 
+		VkMemoryPropertyFlags memoryProperties);
+
 
 	VkCommandBuffer beginSingleTimeCommandBuffer();
 
 	void endSingleTimeCommandBuffer(VkCommandBuffer& buffer);
 
 	void transitImageLayout(VkImage& image,
-							VkImageLayout oldLayout,
-							VkImageLayout newLayout,
-							VkAccessFlags srcAccessMask,
-							VkAccessFlags dstAccessMask,
-							VkImageAspectFlags aspectFlag,
-							VkPipelineStageFlags srcStageMask,
-							VkPipelineStageFlags dstStageMask);
+		uint32_t numLayer,
+		VkImageLayout oldLayout,
+		VkImageLayout newLayout,
+		VkAccessFlags srcAccessMask,
+		VkAccessFlags dstAccessMask,
+		VkImageAspectFlags aspectFlag,
+		VkPipelineStageFlags srcStageMask,
+		VkPipelineStageFlags dstStageMask);
 
 
-	VkImageView createImageView(VkImage& image, VkImageAspectFlags aspectMask, VkFormat viewFormat, VkImageViewType viewType);
+	VkImageView createImageView(VkImage& image, uint32_t numLayers, VkImageAspectFlags aspectMask, VkFormat viewFormat, VkImageViewType viewType);
 
 	VkSampler createTextureSampler();
 
@@ -279,19 +334,16 @@ private:
 
 	std::vector<VkCommandBuffer> m_commandBuffers;
 
-	VkPipelineLayout m_pipelineLayout;
+	//VkPipelineLayout m_pipelineLayout;
 
 	VkRenderPass m_renderPass = nullptr;
 
 	std::vector<VkFramebuffer> m_framebuffers;
 
-	VkPipeline m_graphicsPipeline;
-
 	bool m_minimized = false;
 	
 	VkPhysicalDeviceMemoryProperties m_physicalDeviceMemProp;
 
-	//VkDescriptorPool m_descriptorSetPool;
 
 	std::recursive_mutex m_actorLock;
 

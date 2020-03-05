@@ -20,12 +20,7 @@ struct Data
     glm::mat4 location;
 };
 
-void framebufferResizeCallback(GLFWwindow* window, int width, int height)
-{
-    auto data = reinterpret_cast<Data*>(glfwGetWindowUserPointer(window));
-    data->r->resizeWindow(width, height);
 
-}
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)

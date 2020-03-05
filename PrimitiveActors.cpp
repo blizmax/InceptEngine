@@ -1,8 +1,9 @@
 #include "PrimitiveActors.h"
 #include "SkeletonMesh.h"
+#include "Renderer.h"
 
 //unit square with length 1
-Plane::Plane(Renderer* renderer, std::string texturePath, Light* light)
+Plane::Plane(Renderer* renderer, ShaderPath shaderpath, std::string texturePath, Light* light)
 	:Actor(glm::mat4(1.0))
 {
 	Vertex v1 = {};
@@ -25,7 +26,7 @@ Plane::Plane(Renderer* renderer, std::string texturePath, Light* light)
 
 	std::vector<Vertex> vertices = { v1, v2, v3, v4 };
 	std::vector<uint32_t> indices = { 0,1,2,2,3,0 };
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, texturePath, nullptr);
+	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr);
 	mesh->updateUniformBuffer(renderer, getIdentityTransformationBuffer(), light);
 
 	setSkeletonMesh(mesh);

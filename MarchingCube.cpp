@@ -57,6 +57,7 @@ void marchingSingleCell(const Cell& cell, std::vector<Vertex>& vertices, std::ve
 
 }
 
+/*
 SkeletonMesh* marchingSpace(const std::vector<Cell> cellsInSpace, Renderer* renderer, std::string texturePath)
 {
 	std::vector<Vertex> vertices;
@@ -67,7 +68,7 @@ SkeletonMesh* marchingSpace(const std::vector<Cell> cellsInSpace, Renderer* rend
 	}
 
 	return new SkeletonMesh(renderer, vertices, indices, texturePath, nullptr);
-}
+}*/
 
 std::array<glm::vec4, 8> Cell::getCellVertexPosition()
 {

@@ -14,7 +14,7 @@
 
 #include "FastNoise.h"
 
-
+#include "Skybox.h"
 
 glm::mat4 computeBoneMatrix(glm::vec3 position, glm::vec3 pointDirection)
 {
@@ -314,7 +314,7 @@ float testInOrOutSphere(glm::vec4 position)
 }
 
 
-Actor* createSphere(Renderer* renderer, std::string texturePath)
+Actor* createSphere(Renderer* renderer, ShaderPath shaderpath, std::string texturePath)
 {
 	std::vector<Vertex> vertices = {};
 	std::vector<uint32_t> indices = {};
@@ -341,7 +341,7 @@ Actor* createSphere(Renderer* renderer, std::string texturePath)
 
 
 	Actor* sphere = new Actor(glm::mat4(1.0));
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, texturePath, nullptr);
+	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr);
 	sphere->setSkeletonMesh(mesh);
 	return sphere;
 }
@@ -349,7 +349,7 @@ Actor* createSphere(Renderer* renderer, std::string texturePath)
 
 
 
-Actor* createrRandomTerrain(Renderer* renderer, std::string texturePath)
+Actor* createrRandomTerrain(Renderer* renderer, ShaderPath shaderpath, std::string texturePath)
 {
 	
 
@@ -378,18 +378,31 @@ Actor* createrRandomTerrain(Renderer* renderer, std::string texturePath)
 		}
 	}
 
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, texturePath, nullptr);
+	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr);
 
 	Actor* terrain = new Actor(glm::mat4(1.0));
 	terrain->setSkeletonMesh(mesh);
 	return terrain;
 }
 
+/*
+//shaders  "D:\\Inception\\Content\\Shaders\\spv\\vertex.spv"   "D:\\Inception\\Content\\Shaders\\spv\\fragment.spv"
 int main()
 {
 
-
 	Renderer* renderer = new Renderer();
+
+	std::string skyboxTexturePath[6] =
+	{
+		"D:\\Inception\\Content\\Textures\\Skybox\\front.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\back.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\top.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\bottom.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\right.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\left.png"
+	};
+
+	Skybox* skybox = new Skybox(renderer, skyboxTexturePath);
 
 	Light light;
 	light.m_locationAndIntensity = { 0.0f,2000.0f,0.0f, 1.0f };
@@ -521,7 +534,157 @@ int main()
 
 	delete renderer;
 	
+}*/
+
+
+
+int main()
+{
+	ShaderPath shaderpath = { "D:\\Inception\\Content\\Shaders\\spv\\vertex.spv","D:\\Inception\\Content\\Shaders\\spv\\fragment.spv" };
+
+	Renderer* renderer = new Renderer();
+
+	std::string skyboxTexturePath[6] =
+	{
+		"D:\\Inception\\Content\\Textures\\Skybox\\front.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\back.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\top.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\bottom.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\right.png",
+		"D:\\Inception\\Content\\Textures\\Skybox\\left.png"
+	};
+
+
+	Light light;
+	light.m_locationAndIntensity = { 0.0f,2000.0f,0.0f, 1.0f };
+
+
+	Skybox* skybox = new Skybox(renderer, skyboxTexturePath);
+	std::vector<glm::mat4> planeBoneT(2, glm::mat4(1.0));
+	skybox->getSkeletonMesh()->updateUniformBuffer(renderer, planeBoneT, &light);
+	
+
+
+
+	std::string grassTexturePath = "D:\\Inception\\Content\\Textures\\T_Grass.BMP";
+
+	Actor* plane = new Plane(renderer, shaderpath, grassTexturePath, &light);
+
+	planeBoneT[1] = glm::scale(glm::vec3(3000, 1, 3000));
+
+	plane->getSkeletonMesh()->initializeUniformBuffer(renderer, planeBoneT, &light);
+
+
+
+	
+	renderer->spawnActor(skybox);
+
+
+	renderer->spawnActor(plane);
+
+	Actor* dullCam = new Actor(glm::mat4(1.0));
+
+
+
+	auto m_window = renderer->getWindow();
+
+	glfwSetInputMode(*m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	unsigned char pixels[16 * 16 * 4];
+	memset(pixels, 0xff, sizeof(pixels));
+	GLFWimage image;
+	image.width = 16;
+	image.height = 16;
+	image.pixels = pixels;
+	GLFWcursor* cursor = glfwCreateCursor(&image, 0, 0);
+	glfwSetCursor(*m_window, cursor);
+
+
+	float time = 0.0f;
+
+	Camera followingCam = Camera(dullCam, glm::vec4(0, 50, 20, 1.0f), glm::vec4(0, 0, 0, 1.0f));
+
+	bool enableCameraMove = false;
+	Data data = { renderer, &followingCam, &enableCameraMove, dullCam, nullptr, nullptr };
+
+	glfwSetWindowUserPointer(*m_window, &data);
+
+	glfwSetKeyCallback(*renderer->getWindow(), key_callback);
+
+
+	glfwSetInputMode(*m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	double xPos;
+	double yPos;
+	double lastXPos;
+	double lastYPos;
+
+	glfwGetCursorPos(*renderer->getWindow(), &xPos, &yPos);
+
+	glfwGetCursorPos(*renderer->getWindow(), &lastXPos, &lastYPos);
+
+	float deltaTime = 0.0f;
+
+	auto startTime = std::chrono::high_resolution_clock::now();
+
+
+	auto frameRateTestStartTime = std::chrono::high_resolution_clock::now();
+
+	int nFrames = 150;
+
+
+	assert(renderer->getNumActors() != 0);
+
+	while (!glfwWindowShouldClose(*m_window))
+	{
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+		if (time > 1.8f)
+		{
+			startTime = std::chrono::high_resolution_clock::now();
+		}
+
+
+
+		glfwGetCursorPos(*renderer->getWindow(), &xPos, &yPos);
+
+		if (enableCameraMove)
+		{
+			followingCam.rotateHorizontal((float)((lastXPos - xPos) * 0.1));
+			followingCam.rotateVertical((float)((lastYPos - yPos) * 0.05));
+		}
+
+		lastXPos = xPos;
+		lastYPos = yPos;
+
+
+		glfwPollEvents();
+
+		renderer->m_mvp.view = followingCam.cameraMatrix();
+
+
+		renderer->drawFrame();
+
+		deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(std::chrono::high_resolution_clock::now() - currentTime).count();
+
+		nFrames += 1;
+	}
+
+	auto testEndTime = std::chrono::high_resolution_clock::now();
+	float testDuration = std::chrono::duration<float, std::chrono::seconds::period>(testEndTime - frameRateTestStartTime).count();
+
+
+	std::cout << "Average Frame: " << nFrames / testDuration << std::endl;
+
+
+	delete plane;
+
+	delete skybox;
+
+
+	delete renderer;
+
 }
+
 
 
 

@@ -193,6 +193,7 @@
     <ClCompile Include="ResourceExporter.cpp" />
     <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="SkeletonMesh.cpp" />
+    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="Vertex.cpp" />
   </ItemGroup>
@@ -214,6 +215,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="SkeletonMesh.h" />
+    <ClInclude Include="Skybox.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />

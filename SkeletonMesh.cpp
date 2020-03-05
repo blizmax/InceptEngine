@@ -4,7 +4,7 @@
 #include "Skeleton.h"
 #include "Global.h"
 
-SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::string texturePath, Skeleton* skeleton)
+SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string texturePath, Skeleton* skeleton)
 {
 
 	m_vertexBuffer = renderer->createVertexBuffer(vertices);
@@ -20,6 +20,33 @@ SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertic
 	m_uBuffer = renderer->createUniformBuffer(); //just allocate the buffer, no data binding now
 
 	m_dataDesc = renderer->createDataDescription(*m_uBuffer, *m_texture);
+
+	m_pipeline = renderer->createPipeline(shaderpath, m_dataDesc);
+
+	m_currentAnimation = nullptr;
+
+	m_cubemap = nullptr;
+}
+
+SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string cubemapPath[6])
+{
+	m_vertexBuffer = renderer->createVertexBuffer(vertices);
+
+	m_indexBuffer = renderer->createIndexBuffer(indices);
+
+	n_indices = static_cast<uint32_t>(indices.size());
+
+	m_texture = nullptr;
+
+	m_skeleton = nullptr;
+
+	m_cubemap = renderer->createCubeMap(cubemapPath);
+
+	m_uBuffer = renderer->createUniformBuffer(); //just allocate the buffer, no data binding now
+
+	m_dataDesc = renderer->createSkyboxDataDescription(*m_uBuffer, *m_cubemap);
+
+	m_pipeline = renderer->createPipeline(shaderpath, m_dataDesc);
 
 	m_currentAnimation = nullptr;
 }
@@ -53,6 +80,10 @@ SkeletonMesh::~SkeletonMesh()
 	if (m_skeleton != nullptr)
 	{
 		delete m_skeleton;
+	}
+	if (m_pipeline != nullptr)
+	{
+		delete m_pipeline;
 	}
 }
 
@@ -109,6 +140,11 @@ VkDescriptorSet* SkeletonMesh::getDescritorset(int i)
 	return &m_dataDesc->m_descriptorSet[i];
 }
 
+Pipeline* SkeletonMesh::getPipeline()
+{
+	return m_pipeline;
+}
+
 void SkeletonMesh::initializeUniformBuffer(Renderer* renderer, const std::vector<glm::mat4>& transformations, Light* light)
 {
 	if (m_uBuffer == nullptr)
@@ -137,7 +173,7 @@ void printModelStats(const aiScene* scene)
 
 }
 
-SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::string& filepath, std::string texturePath, const std::string& rootBoneName, bool importAllMesh)
+SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::string& filepath, ShaderPath shaderpath, std::string texturePath, const std::string& rootBoneName, bool importAllMesh)
 {
 
 	Assimp::Importer importer;
@@ -243,7 +279,7 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 	
 
 	
-	return new SkeletonMesh(renderer, vertices, indices, texturePath, skeleton);
+	return new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, skeleton);
 }
 
 
