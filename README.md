@@ -4,6 +4,8 @@ computation, ASSIMP for read FBX data, Fast Noise to generate Perlin noise.
 
 **Enabled Features (from new to old):**
 
+* Cube map and skybox
+
 * Randomly generating terrain using Perlin Noise and rendering using Marching Cube
 
 * Marching Cube algorithm for rendering predefined surface
@@ -33,7 +35,6 @@ computation, ASSIMP for read FBX data, Fast Noise to generate Perlin noise.
 
 **Implementing Features:**
 
-  * Sky box
   
   * Audio
   
