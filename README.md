@@ -1,8 +1,11 @@
 # Inception Engine
-An independent work attemping to implement some components of a game engine from scratch. Use Vulkan API to render, GLM library for math 
-computation, ASSIMP for read FBX data, Fast Noise to generate Perlin noise.
+An independent work attemping to implement some components of a game engine from scratch. 
 
 **Enabled Features (from new to old):**
+
+* Capsule collision
+
+* Generating terrain using height map and terrain collision detection
 
 * Cube map and skybox
 
@@ -25,7 +28,9 @@ computation, ASSIMP for read FBX data, Fast Noise to generate Perlin noise.
 
 * Character control
 
-* Point light with ambient and specular
+* Point light
+
+* Play audio
 
 * Base color texture
 
@@ -34,13 +39,6 @@ computation, ASSIMP for read FBX data, Fast Noise to generate Perlin noise.
 
 
 **Implementing Features:**
-
-  
-  * Audio
-  
-  * Capsule collision and terrain collision
-  
-  * Terrain height map
   
   * Depth detection
   
@@ -52,3 +50,14 @@ computation, ASSIMP for read FBX data, Fast Noise to generate Perlin noise.
   
   * Simple ray tracer
   
+  **Reference:**
+  
+  * Vulkan: for rendering
+  
+  * GLFW: for window handling
+  
+  * GLM: for math computation
+  
+  * Assimp: for reading FBA files
+  
+  * Fast Noise: for generating Perlin noise
