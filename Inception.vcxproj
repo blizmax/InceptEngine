@@ -185,6 +185,7 @@
     <ClCompile Include="ChangeCooridinateSystem.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="BasicStaticMesh.cpp" />
+    <ClCompile Include="Collision.cpp" />
     <ClCompile Include="FastNoise.cpp" />
     <ClCompile Include="MarchingCube.cpp" />
     <ClCompile Include="Mesh.cpp" />
