@@ -192,7 +192,7 @@ Terrain::Terrain(Renderer* renderer, std::string_view heightMap)
 
 Terrain::~Terrain()
 {
-	for (int i = 0; i < m_vertexHeights.size(); i++) delete m_vertexHeights[i];
+	for (int i = 0; i < m_vertexHeights.size(); i++) delete[] m_vertexHeights[i];
 }
 
 uint32_t Terrain::getNumVertices()
