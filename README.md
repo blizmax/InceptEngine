@@ -58,6 +58,6 @@ An independent work attemping to implement some components of a game engine from
   
   * GLM: for math computation
   
-  * Assimp: for reading FBA files
+  * Assimp: for reading FBX files
   
-  * Fast Noise: for generating Perlin noise
+  * Fast Noise: for generating Perlin Noise
