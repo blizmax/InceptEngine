@@ -47,6 +47,9 @@ public:
 	void rotate(glm::vec3 axis, float degree);
 	void rotate(glm::vec4 axis, float degree);
 	void scale(glm::vec3 scale);
+	void setActorLocation(glm::vec4 location);
+	void setActorHeight(float height);
+
 
 	glm::vec4 getForwardVector();
 

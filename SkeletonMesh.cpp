@@ -4,7 +4,7 @@
 #include "Skeleton.h"
 #include "Global.h"
 
-SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string texturePath, Skeleton* skeleton)
+SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string texturePath, Skeleton* skeleton, VkPrimitiveTopology topology)
 {
 
 	m_vertexBuffer = renderer->createVertexBuffer(vertices);
@@ -21,14 +21,10 @@ SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertic
 
 	m_dataDesc = renderer->createDataDescription(*m_uBuffer, *m_texture);
 
-	m_pipeline = renderer->createPipeline(shaderpath, m_dataDesc);
-
-	m_currentAnimation = nullptr;
-
-	m_cubemap = nullptr;
+	m_pipeline = renderer->createPipeline(shaderpath, m_dataDesc, topology);
 }
 
-SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string cubemapPath[6])
+SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string cubemapPath[6], VkPrimitiveTopology topology)
 {
 	m_vertexBuffer = renderer->createVertexBuffer(vertices);
 
@@ -36,19 +32,14 @@ SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertic
 
 	n_indices = static_cast<uint32_t>(indices.size());
 
-	m_texture = nullptr;
-
-	m_skeleton = nullptr;
-
 	m_cubemap = renderer->createCubeMap(cubemapPath);
 
 	m_uBuffer = renderer->createUniformBuffer(); //just allocate the buffer, no data binding now
 
 	m_dataDesc = renderer->createSkyboxDataDescription(*m_uBuffer, *m_cubemap);
 
-	m_pipeline = renderer->createPipeline(shaderpath, m_dataDesc);
+	m_pipeline = renderer->createPipeline(shaderpath, m_dataDesc, topology);
 
-	m_currentAnimation = nullptr;
 }
 
 SkeletonMesh::~SkeletonMesh()
@@ -84,6 +75,10 @@ SkeletonMesh::~SkeletonMesh()
 	if (m_pipeline != nullptr)
 	{
 		delete m_pipeline;
+	}
+	if (m_cubemap != nullptr)
+	{
+		delete m_cubemap;
 	}
 }
 
@@ -277,9 +272,23 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 		}
 	}
 	
+	/*
+	std::string texCoord;
+	for (auto vertex : vertices)
+	{
+		texCoord.append(glm::to_string(vertex.texCoord));
+		texCoord.append("\n");
+	}
+
+	std::ofstream myfile;
+	myfile.open("swordTexCoord.txt");
+	myfile << texCoord;
+	myfile.close();
+	*/
+
 
 	
-	return new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, skeleton);
+	return new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, skeleton, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 }
 
 

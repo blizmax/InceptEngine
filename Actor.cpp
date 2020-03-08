@@ -71,6 +71,16 @@ void Actor::scale(glm::vec3 scale)
 	m_localFrame.Z = scaleMatrix * m_localFrame.Z;
 }
 
+void Actor::setActorLocation(glm::vec4 location)
+{
+	m_localFrame.O = location;
+}
+
+void Actor::setActorHeight(float height)
+{
+	m_localFrame.O.y = height;
+}
+
 glm::vec4 Actor::getForwardVector()
 {
 	return -m_localFrame.Z;

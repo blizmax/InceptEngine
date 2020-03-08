@@ -26,9 +26,13 @@ const uint32_t n_buffers = 2;
 
 class Renderer;
 
+class Terrain;
+
 class Actor;
 
 struct Light;
+
+
 
 struct MVP
 {
@@ -91,6 +95,9 @@ struct Pipeline
 	VkPipelineLayout m_pipelineLayout;
 };
 
+
+
+
 struct Texture
 {
 	Texture(Renderer* renderer);
@@ -113,6 +120,15 @@ struct CubeMap
 	VkDeviceMemory m_cubeMapImageMemory;
 	VkImageView m_view;
 	VkSampler m_sampler;
+};
+
+
+struct Material
+{
+	Material();
+	~Material();
+	Texture* m_texture = nullptr;
+	CubeMap* m_cubeMap = nullptr;
 };
 
 //the transformation buffer, by design, is a vulkan uniform buffer of array of 200 glm::mat4
@@ -147,11 +163,14 @@ struct DataDescription
 	std::array<VkDescriptorSet, 2> m_descriptorSet;
 };
 
+class Skybox;
 
 class Renderer
 {
 
 public:
+
+	void setSkybox(Skybox* skybox);
 
 	Renderer();
 
@@ -184,7 +203,7 @@ public:
 
 	DataDescription* createDataDescription(const UniformBuffer& uBuffer, const Texture& texture);
 
-	Pipeline* createPipeline(ShaderPath shaderpath, DataDescription* dataDesc);
+	Pipeline* createPipeline(ShaderPath shaderpath, DataDescription* dataDesc, VkPrimitiveTopology topology);
 
 	CubeMap* createCubeMap(std::string texturePaths[6]);
 
@@ -208,6 +227,7 @@ public:
 
 	size_t getNumActors();
 	
+	void setTerrain(Terrain* terrain);
 	
 private:
 	void createWindow();
@@ -296,7 +316,10 @@ private:
 	void cleanup();
 
 private:
-	
+	Skybox* m_skybox = nullptr;
+
+	Terrain* m_terrain = nullptr;
+
 	uint32_t m_currentRenderingImgIdx = 0;
 
 	uint32_t m_windowWidth;

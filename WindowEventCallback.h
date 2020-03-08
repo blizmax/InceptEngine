@@ -7,6 +7,11 @@
 #include "Camera.h"
 #include "Player.h"
 
+
+
+
+
+
 struct Data
 {
     Renderer* r;
@@ -15,9 +20,11 @@ struct Data
     Actor* p;
     Actor* sword;
     void (*IkFAB)(std::vector<glm::mat4>& boneT, Skeleton& skeleton, glm::mat4 swordLocation);
+    void (*audio)();
     std::vector<glm::mat4>* tPose;
     Skeleton* sk;
     glm::mat4 location;
+    std::thread* music;
 };
 
 
@@ -32,20 +39,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     else if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT ))
     {
-        data->p->translate(glm::vec3(data->p->getForwardVector()), -2.0f);
+        data->p->translate(glm::vec3(data->p->getForwardVector()), 20.0f);
         
     }
     else if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
-        data->p->translate(glm::vec3(data->p->getForwardVector()), 2.0f);
+        data->p->translate(glm::vec3(data->p->getForwardVector()), -20.0f);
     }
     else if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
-        data->p->translate(glm::vec3(data->p->getRightWardVector()), -2.0f);
+        data->p->translate(glm::vec3(data->p->getRightWardVector()), 20.0f);
     }
     else if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
-        data->p->translate(glm::vec3(data->p->getRightWardVector()), 2.0f);
+        data->p->translate(glm::vec3(data->p->getRightWardVector()), -20.0f);
        
     }
     else if (key == GLFW_KEY_Q && action == GLFW_PRESS)
@@ -82,6 +89,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
+        if (*data->b) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+       
         *data->b = ! *data->b;
     }
     else if (key == GLFW_KEY_3 && action == GLFW_PRESS)
@@ -102,11 +112,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     else if (key == GLFW_KEY_L && action == GLFW_PRESS)
     {
-        data->c->lightUp(3.0f);
+        data->c->lightUp(30.0f);
     }
     else if (key == GLFW_KEY_K && action == GLFW_PRESS)
     {
-        data->c->lightUp(-3.0f);
+        data->c->lightUp(-30.0f);
     }
+    else if (key == GLFW_KEY_P && action == GLFW_PRESS)
+    {
+        data->music = new std::thread(data->audio);
+    }
+
 
 }

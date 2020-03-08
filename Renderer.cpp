@@ -5,6 +5,8 @@
 #include "Actor.h"
 #include "SkeletonMesh.h"
 #include "Light.h"
+#include "Terrain.h"
+#include "Skybox.h"
 
 DataDescription* Renderer::createDataDescription(const UniformBuffer& uBuffer, const Texture& texture)
 {
@@ -22,6 +24,12 @@ DataDescription* Renderer::createSkyboxDataDescription(const UniformBuffer& uBuf
 	desc->m_layout = createSkyboxDescriptorSetLayout();
 	desc->m_descriptorSet = createSkyboxDescriptorSet(desc->m_layout, desc->m_pool, uBuffer, cubemap);
 	return desc;
+}
+
+void Renderer::setSkybox(Skybox* skybox)
+{
+	if (m_skybox != nullptr) delete m_skybox;
+	m_skybox = skybox;
 }
 
 Renderer::Renderer()
@@ -215,8 +223,8 @@ void Renderer::createWindow()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-	m_windowWidth = 800;
-	m_windowHeight = 600;
+	m_windowWidth = 1600;
+	m_windowHeight = 900;
 	m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, "Inception Engine", nullptr, nullptr);
 
 	
@@ -547,7 +555,7 @@ void Renderer::recordCommandBuffer(uint32_t i)
 	
 
 	VkDeviceSize offset[] = { 0 };
-	
+
 	for (auto actor : m_actors)
 	{
 		vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, actor->getSkeletonMesh()->getPipeline()->m_pipeline);
@@ -562,12 +570,9 @@ void Renderer::recordCommandBuffer(uint32_t i)
 
 		vkCmdDrawIndexed(m_commandBuffers[i], actor->getSkeletonMesh()->getNumIndices(), 1, 0, 0, 0);
 	}
-	
 
 
 	vkCmdEndRenderPass(m_commandBuffers[i]);
-
-
 	vkEndCommandBuffer(m_commandBuffers[i]);
 
 }
@@ -603,7 +608,7 @@ VkShaderModule Renderer::loadShaderModule(const std::string& filePath)
 
 }
 
-Pipeline* Renderer::createPipeline(ShaderPath shaderpath, DataDescription* dataDesc)
+Pipeline* Renderer::createPipeline(ShaderPath shaderpath, DataDescription* dataDesc, VkPrimitiveTopology topology)
 {
 	
 	Pipeline* pipeline = new Pipeline(this);
@@ -635,7 +640,7 @@ Pipeline* Renderer::createPipeline(ShaderPath shaderpath, DataDescription* dataD
 
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-	inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssemblyStateCreateInfo.topology = topology;
 	inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
 	VkViewport viewport = {};
@@ -1156,18 +1161,6 @@ CubeMap* Renderer::createCubeMap(std::string texturePaths[6])
 	createBuffer(stagingBuffer, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, bufferSize, stagingBufferMem, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	stbi_image_free(front);
 
-	/*
-	for (int i = 0; i < 6; i++)
-	{
-		int width, height, nChannel;
-		stbi_uc* textureImage = stbi_load(texturePaths[i].c_str(), &width, &height, &nChannel, STBI_rgb_alpha);
-		if (textureImage == nullptr || width != cubeMapWidth || height != cubeMapHeight || nChannel != cubeMapNChannel) throw std::runtime_error("");
-		void* data;
-		vkMapMemory(m_device, stagingBufferMem, imageSize * i, imageSize, 0, &data);
-		memcpy(data, reinterpret_cast<const void*>(textureImage), static_cast<size_t>(imageSize));
-		vkUnmapMemory(m_device, stagingBufferMem);
-		stbi_image_free(textureImage);
-	}*/
 
 	void* data;
 	vkMapMemory(m_device, stagingBufferMem, 0, bufferSize, 0, &data);
@@ -1541,6 +1534,12 @@ size_t Renderer::getNumActors()
 	return m_actors.size();
 }
 
+void Renderer::setTerrain(Terrain* terrain)
+{
+	if (m_terrain != nullptr) delete m_terrain;
+	m_terrain = terrain;
+}
+
 uint32_t Renderer::findSuitableMemType(uint32_t filter, VkMemoryPropertyFlags properties)
 {
 	for (uint32_t i = 0; i < m_physicalDeviceMemProp.memoryTypeCount; i++)
@@ -1648,8 +1647,6 @@ CubeMap::~CubeMap()
 	vkDestroySampler(m_renderer->getDevice(), m_sampler, nullptr);
 	vkDestroyImage(m_renderer->getDevice(), m_cubeMapImage, nullptr);
 	vkFreeMemory(m_renderer->getDevice(), m_cubeMapImageMemory, nullptr);
-	std::cout << "delete all cube map" << std::endl;
-
 }
 
 Pipeline::Pipeline(Renderer* renderer)
@@ -1662,4 +1659,14 @@ Pipeline::~Pipeline()
 	vkDeviceWaitIdle(m_renderer->getDevice());
 	vkDestroyPipeline(m_renderer->getDevice(), m_pipeline, nullptr);
 	vkDestroyPipelineLayout(m_renderer->getDevice(), m_pipelineLayout, nullptr);
+}
+
+Material::Material()
+{
+}
+
+Material::~Material()
+{
+	if(m_texture != nullptr) delete m_texture;
+	if(m_cubeMap != nullptr) delete m_cubeMap;
 }

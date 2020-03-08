@@ -16,6 +16,12 @@
 
 #include "Skybox.h"
 
+#include <windows.h>
+#include <iostream>
+#pragma comment(lib, "winmm.lib")
+
+
+
 glm::mat4 computeBoneMatrix(glm::vec3 position, glm::vec3 pointDirection)
 {
 	auto helper = glm::normalize(glm::vec3(1.0f, 2.0f, 5.0f));
@@ -150,6 +156,7 @@ int main()
 	std::vector<glm::mat4> planeBoneT(70, glm::mat4(1.0));
 	planeBoneT[1] = glm::scale(glm::vec3(3000, 1, 3000));
 	
+
 	tPose[1] = hornet->getActorTransformation();
 
 	std::vector<glm::mat4> swordTBuffer = std::vector<glm::mat4>(2, glm::mat4(1.0));
@@ -230,7 +237,7 @@ int main()
 			startTime = std::chrono::high_resolution_clock::now();
 		}
 
-		//auto boneT = getBonesTransformation(*hornet->getSkeletonMesh()->getSkeleton(), *hornetNormalAttackOne, time);
+		
 
 		glfwGetCursorPos(*renderer->getWindow(), &xPos, &yPos);
 
@@ -248,7 +255,7 @@ int main()
 
 		renderer->m_mvp.view = followingCam.cameraMatrix();
 
-		
+	  //auto boneT = getBonesTransformation(*hornet->getSkeletonMesh()->getSkeleton(), *hornetNormalAttackOne, time);
 	//	boneT[1] = hornet->getActorTransformation();
 
 		//hornet->getSkeletonMesh()->updateTransformationBuffer(renderer, boneT);
@@ -341,7 +348,7 @@ Actor* createSphere(Renderer* renderer, ShaderPath shaderpath, std::string textu
 
 
 	Actor* sphere = new Actor(glm::mat4(1.0));
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr);
+	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 	sphere->setSkeletonMesh(mesh);
 	return sphere;
 }
@@ -378,7 +385,7 @@ Actor* createrRandomTerrain(Renderer* renderer, ShaderPath shaderpath, std::stri
 		}
 	}
 
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr);
+	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
 	Actor* terrain = new Actor(glm::mat4(1.0));
 	terrain->setSkeletonMesh(mesh);
@@ -537,12 +544,74 @@ int main()
 }*/
 
 
+void playAudio()
+{
+	mciSendString(L"play D:\\Inception\\Content\\Sounds\\test.mp3 wait", NULL, 0, NULL);
+}
 
+void animationExport(const Skeleton& sk, const Animation& anim)
+{
+	std::string animInfo = "";
+	float step = anim.m_duration / 250;
+	float time = 0;
+	for (int i = 0; i < 245; i++)
+	{
+		animInfo.append(std::to_string(time));
+		auto boneT = getBonesTransformation(sk, anim, time);
+
+
+		for (auto transformation : boneT)
+		{
+			animInfo.append("@");
+			animInfo.append(glm::to_string(transformation));
+		}
+		animInfo.append("\n");
+		time += step;
+	}
+
+	std::ofstream myfile;
+	myfile.open("hornetNormalAttackDef.txt");
+	myfile << animInfo;
+	myfile.close();
+
+	std::cout << "Export finish" << std::endl;
+}
+
+#include "Terrain.h"
+#include <string_view>
 int main()
 {
+
+
 	ShaderPath shaderpath = { "D:\\Inception\\Content\\Shaders\\spv\\vertex.spv","D:\\Inception\\Content\\Shaders\\spv\\fragment.spv" };
 
+
 	Renderer* renderer = new Renderer();
+
+
+	
+
+	Light light;
+	light.m_locationAndIntensity = { 0.0f,2000.0f,0.0f, 1.5f };
+
+	std::string modelPath = "D:\\Inception\\Content\\Models\\HornetGL.FBX";
+	std::string texturePath = "D:\\Inception\\Content\\Textures\\Hornet.HDR";
+
+	SkeletonMesh* hornetMesh = SkeletonMesh::loadSkeletonMesh(renderer, modelPath, shaderpath, texturePath, "root", false);
+	std::string animationPath = "D:\\Inception\\Content\\Models\\NormalAttackOneDef.FBX";
+
+	Animation* normalOneDef = loadAnimation(animationPath, hornetMesh, "root");
+
+
+
+	Player* hornet = new Player(glm::mat4(1.0));
+	hornet->setSkeletonMesh(hornetMesh);
+
+	std::vector<glm::mat4> tPose(70, glm::mat4(1.0));
+	tPose[1] = hornet->getActorTransformation();
+
+	hornet->getSkeletonMesh()->initializeUniformBuffer(renderer, tPose, &light);
+
 
 	std::string skyboxTexturePath[6] =
 	{
@@ -555,36 +624,41 @@ int main()
 	};
 
 
-	Light light;
-	light.m_locationAndIntensity = { 0.0f,2000.0f,0.0f, 1.0f };
+	
 
 
 	Skybox* skybox = new Skybox(renderer, skyboxTexturePath);
 	std::vector<glm::mat4> planeBoneT(2, glm::mat4(1.0));
-	skybox->getSkeletonMesh()->updateUniformBuffer(renderer, planeBoneT, &light);
-	
+	std::vector<glm::mat4> terrainBoneT(2, glm::mat4(1.0));
 
+	skybox->getSkeletonMesh()->initializeUniformBuffer(renderer, planeBoneT, &light);
+
+
+	std::string heightMapPath = "D:\\Inception\\Content\\heightmaps\\HeightMap.png";
+
+
+	Terrain* terrain = new Terrain(renderer, heightMapPath);
+	terrainBoneT[1] = terrain->getActorTransformation();
+	terrain->getSkeletonMesh()->initializeUniformBuffer(renderer, terrainBoneT, &light);
 
 
 	std::string grassTexturePath = "D:\\Inception\\Content\\Textures\\T_Grass.BMP";
 
-	Actor* plane = new Plane(renderer, shaderpath, grassTexturePath, &light);
+	//Actor* plane = new Plane(renderer, shaderpath, grassTexturePath, &light);
 
-	planeBoneT[1] = glm::scale(glm::vec3(3000, 1, 3000));
+	//planeBoneT[1] = glm::scale(glm::vec3(3000, 1, 3000));
 
-	plane->getSkeletonMesh()->initializeUniformBuffer(renderer, planeBoneT, &light);
+	//plane->getSkeletonMesh()->initializeUniformBuffer(renderer, planeBoneT, &light);
 
 
 
-	
+	//renderer->spawnActor(plane);
+
 	renderer->spawnActor(skybox);
-
-
-	renderer->spawnActor(plane);
-
-	Actor* dullCam = new Actor(glm::mat4(1.0));
-
-
+	renderer->spawnActor(terrain);
+	renderer->spawnActor(hornet);
+	
+	
 
 	auto m_window = renderer->getWindow();
 
@@ -601,17 +675,17 @@ int main()
 
 	float time = 0.0f;
 
-	Camera followingCam = Camera(dullCam, glm::vec4(0, 50, 20, 1.0f), glm::vec4(0, 0, 0, 1.0f));
+	Camera followingCam = Camera(hornet, glm::vec4(0, 119.745132f, 475.598633f, 1.0f), glm::vec4(0, 128.575134f, 76.504005f, 1.0f));
 
 	bool enableCameraMove = false;
-	Data data = { renderer, &followingCam, &enableCameraMove, dullCam, nullptr, nullptr };
+	Data data = { renderer, &followingCam, &enableCameraMove, hornet, nullptr, nullptr, playAudio };
 
 	glfwSetWindowUserPointer(*m_window, &data);
 
 	glfwSetKeyCallback(*renderer->getWindow(), key_callback);
 
 
-	glfwSetInputMode(*m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(*m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	double xPos;
 	double yPos;
 	double lastXPos;
@@ -630,6 +704,7 @@ int main()
 
 	int nFrames = 150;
 
+	std::vector<glm::mat4> boneT(70, glm::mat4(1.0f));
 
 	assert(renderer->getNumActors() != 0);
 
@@ -638,7 +713,7 @@ int main()
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-		if (time > 1.8f)
+		if (time > 0.8f)
 		{
 			startTime = std::chrono::high_resolution_clock::now();
 		}
@@ -660,7 +735,16 @@ int main()
 		glfwPollEvents();
 
 		renderer->m_mvp.view = followingCam.cameraMatrix();
+		//auto boneT = getBonesTransformation(*hornet->getSkeletonMesh()->getSkeleton(), *normalOneDef, time);
+		//boneT[1] = hornet->getActorTransformation();
 
+
+		float currentTerrainHeight = terrain->getTerrainHeight(hornet->getActorLocation());
+
+		hornet->setActorHeight(currentTerrainHeight);
+
+		boneT[1] = hornet->getActorTransformation();
+		hornet->getSkeletonMesh()->updateUniformBuffer(renderer, boneT, &light);
 
 		renderer->drawFrame();
 
@@ -675,12 +759,19 @@ int main()
 
 	std::cout << "Average Frame: " << nFrames / testDuration << std::endl;
 
+	
+	delete normalOneDef;
 
-	delete plane;
+	delete data.music;
+
+	delete hornet;
+
+	delete terrain;
+	//delete plane;
 
 	delete skybox;
 
-
+	
 	delete renderer;
 
 }

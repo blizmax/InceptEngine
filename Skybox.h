@@ -15,7 +15,6 @@ public:
 
 
 private:
-	CubeMap* m_cubeMap;
 };
 
 

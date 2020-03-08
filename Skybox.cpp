@@ -6,20 +6,6 @@
 Skybox::Skybox(Renderer* renderer, std::string texturePath[6])
 	:Actor(glm::mat4(1.0))
 {
-	m_cubeMap = nullptr;
-	m_cubeMap = renderer->createCubeMap(texturePath);
-	/*
-	const glm::vec4 vertexPositions[8] =
-	{
-		glm::vec4(-0.5f, -0.5f, -0.5f, 1.0f),
-		glm::vec4(0.5f, -0.5f, -0.5f, 1.0f),
-		glm::vec4(0.5f, -0.5f, 0.5f, 1.0f),
-		glm::vec4(-0.5f, -0.5f, 0.5f, 1.0f),
-		glm::vec4(-0.5f, 0.5f, -0.5f, 1.0f),
-		glm::vec4(0.5f, 0.5f, -0.5f, 1.0f),
-		glm::vec4(0.5f, 0.5f, 0.5f, 1.0f),
-		glm::vec4(-0.5f, 0.5f, 0.5f, 1.0f)
-	};*/
 	const glm::vec4 vertexPositions[8] =
 	{
 		glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f),
@@ -50,11 +36,11 @@ Skybox::Skybox(Renderer* renderer, std::string texturePath[6])
 		"D:\\Inception\\Content\\Shaders\\spv\\skyboxFrag.spv"
 	};
 
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, path, texturePath);
+	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, path, texturePath, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 	setSkeletonMesh(mesh);
 }
 
 Skybox::~Skybox()
 {
-	delete m_cubeMap;
+
 }

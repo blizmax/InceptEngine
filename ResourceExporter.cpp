@@ -37,6 +37,12 @@ void skeletonMeshExport(const SkeletonMesh& sk)
 
 	std::cout << "Export finish" << std::endl;
 }
+*/
+/*
+#include "Skeleton.h"
+#include "Animation.h"
+#include <iostream>
+#include <fstream>
 
 void animationExport(const Skeleton& sk, const Animation& anim)
 {
@@ -59,7 +65,7 @@ void animationExport(const Skeleton& sk, const Animation& anim)
 	}
 
 	std::ofstream myfile;
-	myfile.open("hornetNormalAttackOne.txt");
+	myfile.open("hornetNormalAttackDef.txt");
 	myfile << animInfo;
 	myfile.close();
 

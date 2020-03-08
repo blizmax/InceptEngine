@@ -22,9 +22,9 @@ struct CubeMap;
 class SkeletonMesh
 {
 public:
-	SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string texturePath, Skeleton* skeleton);
+	SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string texturePath, Skeleton* skeleton, VkPrimitiveTopology topology);
 
-	SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string cubemapPath[6]);
+	SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string cubemapPath[6], VkPrimitiveTopology topology);
 
 	~SkeletonMesh();
 
@@ -56,25 +56,25 @@ private:
 
 private:
 
-	VertexBuffer* m_vertexBuffer;
+	VertexBuffer* m_vertexBuffer = nullptr;
 
-	uint32_t n_indices;
+	uint32_t n_indices = 0;
 
-	IndexBuffer* m_indexBuffer;
+	IndexBuffer* m_indexBuffer = nullptr;
 
-	Texture* m_texture;
+	Texture* m_texture = nullptr;
 
-	CubeMap* m_cubemap;
+	CubeMap* m_cubemap = nullptr;
 
-	UniformBuffer* m_uBuffer;
+	UniformBuffer* m_uBuffer = nullptr;
 
-	DataDescription* m_dataDesc;
+	DataDescription* m_dataDesc = nullptr;
 
-	Pipeline* m_pipeline;
+	Pipeline* m_pipeline = nullptr;
 
-	Skeleton* m_skeleton;
+	Skeleton* m_skeleton = nullptr;
 
-	Animation* m_currentAnimation;
+	Animation* m_currentAnimation = nullptr;
 
 };
 

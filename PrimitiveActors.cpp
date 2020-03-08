@@ -26,7 +26,7 @@ Plane::Plane(Renderer* renderer, ShaderPath shaderpath, std::string texturePath,
 
 	std::vector<Vertex> vertices = { v1, v2, v3, v4 };
 	std::vector<uint32_t> indices = { 0,1,2,2,3,0 };
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr);
+	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, nullptr, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 	mesh->updateUniformBuffer(renderer, getIdentityTransformationBuffer(), light);
 
 	setSkeletonMesh(mesh);
