@@ -182,13 +182,11 @@
     <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="ChangeCooridinateSystem.cpp" />
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="BasicStaticMesh.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="FastNoise.cpp" />
     <ClCompile Include="MarchingCube.cpp" />
-    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PrimitiveActors.cpp" />
     <ClCompile Include="Renderer.cpp" />
@@ -212,7 +210,6 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="MarchingCube.h" />
     <ClInclude Include="MarchingCubeTables.h" />
-    <ClInclude Include="Mesh.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="PrimitiveActors.h" />
@@ -222,7 +219,6 @@
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="Terrain.h" />
-    <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="WindowEventCallback.h" />
   </ItemGroup>
