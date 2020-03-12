@@ -3,6 +3,8 @@ An independent work attemping to implement some components of a game engine from
 
 **Enabled Features (from new to old):**
 
+* Animation controller
+
 * Capsule collision
 
 * Generating terrain using height map and terrain collision detection
@@ -42,7 +44,7 @@ An independent work attemping to implement some components of a game engine from
   
   * Depth detection
   
-  * Animation control and animation notify
+  * Animation notify
   
   * Multisampling
   
