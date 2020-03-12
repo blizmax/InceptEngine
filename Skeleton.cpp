@@ -21,7 +21,7 @@ bool Skeleton::operator==(const Skeleton& other)
 	return othersBoneNames.empty();
 }
 
-bool Skeleton::addSocket(std::string parent, std::string socketName)
+bool Skeleton::addSocket(std::string parent, std::string socketName, glm::mat4 transformToParent)
 {
 	if (m_bones.count(parent) == 0)
 	{
@@ -31,14 +31,8 @@ bool Skeleton::addSocket(std::string parent, std::string socketName)
 
 	Bone* pParent = &m_bones.at(parent);
 
-	Socket socket;
+	Socket socket(transformToParent, socketName, parent);
 	
-	socket.m_boneId = (unsigned int) (m_bones.size() + m_sockets.size());
-	socket.m_name = socketName;
-	socket.m_offset = pParent->m_offset;
-	socket.m_parent = parent;
-	socket.m_bindPoseTransformToParent = glm::mat4(1.0);
-
 	m_sockets.insert(std::pair(socketName, socket));
 	return true;
 }
@@ -163,6 +157,18 @@ Skeleton* Skeleton::extractSkeletonFromAnimFile(const aiScene* scene, const std:
 	return skeleton;
 }
 
+Socket* Skeleton::getSocket(std::string name)
+{
+	return &m_sockets.at(name);
+}
+
+glm::mat4 Skeleton::getSocketLocation(std::string socketName, const std::vector<glm::mat4>& boneT)
+{
+	Socket* socket = &m_sockets.at(socketName);
+	Bone* parent = &m_bones.at(socket->m_parent);
+	return boneT[parent->m_boneId] * parent->m_bindPoseWorldTransform * socket->m_coordInParent;
+}
+
 Bone::Bone()
 {
 	m_lengthToParent = 0;
@@ -179,8 +185,11 @@ Bone::Bone(std::string boneName, std::string parent, glm::mat4 transformation)
 	m_worldCoord = glm::mat4(1.0);
 }
 
-Socket::Socket()
+Socket::Socket(glm::mat4 coord, std::string name, std::string parent)
 {
+	m_coordInParent = coord;
+	m_socketName = name;
+	m_parent = parent;
 }
 
 Socket::~Socket()

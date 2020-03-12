@@ -12,13 +12,12 @@ struct ShaderPath;
 class Plane : public Actor
 {
 public:
-	Plane(Renderer* renderer, ShaderPath shaderpath, std::string texturePath, Light* light);
+	Plane(GameWorld* world, ShaderPath shaderpath, std::string texturePath);
 
 private:
-	
+	std::vector<glm::mat4> m_planeBoneT;
 };
 
-std::vector<glm::mat4> getIdentityTransformationBuffer();
 
 
 #endif

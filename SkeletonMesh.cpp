@@ -3,6 +3,7 @@
 #include "Animation.h"
 #include "Skeleton.h"
 #include "Global.h"
+#include <omp.h>
 
 SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string texturePath, Skeleton* skeleton, VkPrimitiveTopology topology)
 {
@@ -22,6 +23,8 @@ SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertic
 	m_dataDesc = renderer->createDataDescription(*m_uBuffer, *m_texture);
 
 	m_pipeline = renderer->createPipeline(shaderpath, m_dataDesc, topology);
+
+	m_animSignal = false;
 }
 
 SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, ShaderPath shaderpath, std::string cubemapPath[6], VkPrimitiveTopology topology)
@@ -44,6 +47,11 @@ SkeletonMesh::SkeletonMesh(Renderer* renderer, const std::vector<Vertex>& vertic
 
 SkeletonMesh::~SkeletonMesh()
 {
+	if (m_animationHandle.valid())
+	{
+		m_animSignal = false;
+		m_animationHandle.wait();
+	}
 	if (m_indexBuffer != nullptr)
 	{
 		delete m_indexBuffer;
@@ -64,10 +72,7 @@ SkeletonMesh::~SkeletonMesh()
 	{
 		delete m_dataDesc;
 	}
-	if (m_currentAnimation != nullptr)
-	{
-		delete m_currentAnimation;
-	}
+
 	if (m_skeleton != nullptr)
 	{
 		delete m_skeleton;
@@ -80,6 +85,8 @@ SkeletonMesh::~SkeletonMesh()
 	{
 		delete m_cubemap;
 	}
+	
+	for (auto anim : m_animations) delete anim;
 }
 
 void SkeletonMesh::addBoneToVertex(std::vector<Vertex>& vertices, unsigned int boneID, unsigned int vertexID, float weights)
@@ -126,9 +133,55 @@ Skeleton* SkeletonMesh::getSkeleton()
 	return m_skeleton;
 }
 
-void SkeletonMesh::playAnimation()
+
+void playAnimationHelper(SkeletonMesh* mesh, int index, std::vector<glm::mat4>* boneT, bool loop)
 {
+	auto startTime = std::chrono::high_resolution_clock::now();
+	auto currentTime = std::chrono::high_resolution_clock::now();
+	float duration = std::chrono::duration<float>(currentTime - startTime).count();
+	while (duration < mesh->m_animations[index]->m_duration - 0.001 && mesh->m_animSignal)
+	{
+		auto now1 = std::chrono::high_resolution_clock::now();
+		mesh->m_boneTLock.lock();
+		Animation::setBonesTransformation(*mesh->getSkeleton(), *mesh->m_animations[index], boneT, duration);
+		mesh->m_boneTLock.unlock();
+		auto now2 = std::chrono::high_resolution_clock::now();
+		float deltaTime = std::chrono::duration<float>(now2 - now1).count();
+		long sleepTime = (long)(std::max(0.0f, tickTime - deltaTime) * 1000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+		currentTime = std::chrono::high_resolution_clock::now();
+		duration = std::chrono::duration<float>(currentTime - startTime).count();
+	}
+	if (mesh->m_animSignal)
+	{
+		if (loop)
+		{
+			playAnimationHelper(mesh, index, boneT, loop);
+		}
+		else
+		{
+			mesh->m_motionControlledByAnim = false;
+			
+			playAnimationHelper(mesh, 0, boneT, true);
+		}
+	}
+
+	
 }
+
+void playAnimation(SkeletonMesh* mesh, int animIndex, std::vector<glm::mat4>* boneT, bool loop)
+{
+	if (mesh->m_animationHandle.valid())
+	{
+		mesh->m_animSignal = false;
+		mesh->m_animationHandle.wait();
+	}
+	mesh->m_animSignal = true;
+	mesh->m_motionControlledByAnim = mesh->m_animations[animIndex]->m_rootMotion;
+	mesh->m_animationHandle = std::async(std::launch::async, playAnimationHelper, mesh, animIndex, boneT, loop);
+}
+
+
 
 VkDescriptorSet* SkeletonMesh::getDescritorset(int i)
 {
@@ -148,6 +201,11 @@ void SkeletonMesh::initializeUniformBuffer(Renderer* renderer, const std::vector
 		throw std::runtime_error("");
 	}
 	renderer->initializeUniformBuffer(*m_uBuffer, transformations, light);
+}
+
+void SkeletonMesh::initializeLight(Renderer* renderer, Light* light)
+{
+	renderer->initializeLight(*m_uBuffer, light);
 }
 
 void SkeletonMesh::updateUniformBuffer(Renderer* renderer, const std::vector<glm::mat4>& transformations, Light* light)
@@ -197,8 +255,10 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 
 	std::vector<Vertex> vertices;
 
-
-	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+	vertices.resize(mesh->mNumVertices);
+	int mNumVertices = (int)mesh->mNumVertices;
+#pragma omp parallel for
+	for (int i = 0; i < mNumVertices; i++)
 	{
 		Vertex v;
 		v.position = FBX_Import_Mesh_Root_Transformation * glm::vec4( mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z, 1 );
@@ -215,8 +275,6 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 			v.vertexNormal = glm::normalize(v.vertexNormal);
 		}
 
-
-
 		for (unsigned int j = 0; j < AI_MAX_NUMBER_OF_TEXTURECOORDS; j++)
 		{
 			if (mesh->HasTextureCoords(j))
@@ -230,18 +288,21 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 			}
 		}
 		
-		vertices.push_back(v);
+		vertices[i] = v;
 	}
 
 
 	std::vector<uint32_t> indices;
-	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+	indices.resize(mesh->mNumFaces * 3);
+	int mNumFaces = (int)mesh->mNumFaces;
+#pragma omp parallel for
+	for (int i = 0; i < mNumFaces; i++)
 	{
 		aiFace* face = &mesh->mFaces[i];
 		assert(face->mNumIndices == 3);
-		indices.push_back((uint32_t)face->mIndices[0]);
-		indices.push_back((uint32_t)face->mIndices[1]);
-		indices.push_back((uint32_t)face->mIndices[2]);
+		indices[3 * i] = (uint32_t)face->mIndices[0];
+		indices[3 * i + 1] = (uint32_t)face->mIndices[1];
+		indices[3 * i + 2] = (uint32_t)face->mIndices[2];
 	}
 	assert(indices.size() % 3 == 0);
 
@@ -289,6 +350,15 @@ SkeletonMesh* SkeletonMesh::loadSkeletonMesh(Renderer* renderer, const std::stri
 
 	
 	return new SkeletonMesh(renderer, vertices, indices, shaderpath, texturePath, skeleton, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+}
+
+void SkeletonMesh::loadAnimation(std::vector<std::string> filenames, std::string rootBoneName)
+{
+	for (auto name : filenames)
+	{
+		Animation* anim = Animation::loadAnimation(name, this, rootBoneName);
+		m_animations.push_back(anim);
+	}
 }
 
 

@@ -14,12 +14,9 @@ Camera::Camera(Actor* owner, glm::vec4 position, glm::vec4 forward)
 glm::mat4 Camera::cameraMatrix()
 {
 	auto ownerFrame = m_owner->getActorTransformation();
-
-
-
-	auto worldPosition = ownerFrame * m_position;
-	auto worldForward = ownerFrame * m_forwardPoint;
-
+	auto translaiton = glm::translate(glm::vec3(ownerFrame[3]));
+	auto worldPosition = translaiton * m_position;
+	auto worldForward = translaiton * m_forwardPoint;
 
 	return glm::lookAt(glm::vec3(worldPosition.x, worldPosition.y, worldPosition.z), glm::vec3(worldForward.x, worldForward.y, worldForward.z), glm::vec3(0,1,0));
 }
@@ -48,4 +45,11 @@ void Camera::lightUp(float amount)
 {
 	m_position.y += amount;
 	m_forwardPoint.y += amount;
+}
+
+glm::vec3 Camera::getForwardVec()
+{
+	auto temp = glm::vec3(m_forwardPoint - m_position);
+	temp.y = 0;
+	return glm::normalize(temp);
 }

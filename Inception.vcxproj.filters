@@ -1,140 +1,167 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
+    <Filter Include="Engine Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Game Source Files">
+      <UniqueIdentifier>{3ed7af94-094e-4877-9347-ac6810024d15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="Game Header Files">
+      <UniqueIdentifier>{ea9b2e2f-b2d5-40b4-86cb-f1c74f167d15}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Vertex.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Skeleton.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ActorComponent.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Application.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Actor.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Player.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SkeletonMesh.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StaticMesh.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BasicStaticMesh.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Animation.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ResourceExporter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PrimitiveActors.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MarchingCube.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FastNoise.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Skybox.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Terrain.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Collision.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameWorld.cpp">
+      <Filter>Engine Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hornet.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sword.cpp">
+      <Filter>Game Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plane.cpp">
+      <Filter>Engine Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowEventCallback.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Animation.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SkeletonMesh.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Skeleton.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Vertex.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Actor.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ActorComponent.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Collision.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Player.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BasicStaticMesh.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StaticMesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PrimitiveActors.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Global.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Light.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MarchingCubeTables.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MarchingCube.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FastNoise.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Skybox.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Terrain.h">
-      <Filter>Header Files</Filter>
+      <Filter>Engine Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameWorld.h">
+      <Filter>Engine Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.h">
+      <Filter>Engine Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hornet.h">
+      <Filter>Game Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sword.h">
+      <Filter>Game Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Engine Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plane.h">
+      <Filter>Engine Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

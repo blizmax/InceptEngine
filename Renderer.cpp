@@ -73,37 +73,37 @@ void Renderer::drawFrame()
 	
 	
 
-	if (vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, VK_NULL_HANDLE, m_acquireImageFence, &m_currentRenderingImgIdx) != VK_SUCCESS)
+	if (vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, VK_NULL_HANDLE, m_acquireImageFence, &m_nextRenderImgIdx) != VK_SUCCESS)
 	{
 		std::cerr << "Fail to get next available image from the swap chain" << std::endl;
 		throw std::runtime_error("");
 	}
-	
+
 	vkWaitForFences(m_device, 1, &m_acquireImageFence, VK_TRUE, UINT64_MAX);
 	
 	vkResetFences(m_device, 1, &m_acquireImageFence);
 
-	vkWaitForFences(m_device, 1, &m_imageFinishRenderFence[m_currentRenderingImgIdx], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(m_device, 1, &m_imageFinishRenderFence[m_nextRenderImgIdx], VK_TRUE, UINT64_MAX);
 
-	vkResetFences(m_device, 1, &m_imageFinishRenderFence[m_currentRenderingImgIdx]);
+	vkResetFences(m_device, 1, &m_imageFinishRenderFence[m_nextRenderImgIdx]);
 
-	recordCommandBuffer(m_currentRenderingImgIdx);
+	recordCommandBuffer(m_nextRenderImgIdx);
 
 	VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &m_commandBuffers[m_currentRenderingImgIdx];
+	submitInfo.pCommandBuffers = &m_commandBuffers[m_nextRenderImgIdx];
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &m_graphicsFinishSemaphores[m_currentRenderingImgIdx];
-	vkQueueSubmit(m_queues.at(GRAPHICS_QUEUE), 1, &submitInfo, m_imageFinishRenderFence[m_currentRenderingImgIdx]);
+	submitInfo.pSignalSemaphores = &m_graphicsFinishSemaphores[m_nextRenderImgIdx];
+	vkQueueSubmit(m_queues.at(GRAPHICS_QUEUE), 1, &submitInfo, m_imageFinishRenderFence[m_nextRenderImgIdx]);
 
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &m_graphicsFinishSemaphores[m_currentRenderingImgIdx];
+	presentInfo.pWaitSemaphores = &m_graphicsFinishSemaphores[m_nextRenderImgIdx];
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &m_swapchain;
-	presentInfo.pImageIndices = &m_currentRenderingImgIdx;
+	presentInfo.pImageIndices = &m_nextRenderImgIdx;
 	vkQueuePresentKHR(m_queues.at(PRESENT_QUEUE), &presentInfo);
 
 }
@@ -538,6 +538,7 @@ void Renderer::createCommandBuffers()
 
 void Renderer::recordCommandBuffer(uint32_t i)
 {
+
 	VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo);
 
@@ -1119,7 +1120,7 @@ void Renderer::updateUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm
 
 	auto transformCopy = transformations;
 
-	unsigned int writeToImageIdx = m_currentRenderingImgIdx ^ 1;
+	unsigned int writeToImageIdx = m_nextRenderImgIdx ^ 1;
 
 
 	void* data = nullptr;
@@ -1230,7 +1231,7 @@ void Renderer::initializeUniformBuffer(UniformBuffer& uBuffer, const std::vector
 {
 	//change the buffer of the image that is not being rendered now
 
-	auto transformCopy = transformations;
+	//auto transformCopy = transformations;
 
 	for (unsigned int i = 0; i < n_buffers; i++)
 	{
@@ -1238,7 +1239,7 @@ void Renderer::initializeUniformBuffer(UniformBuffer& uBuffer, const std::vector
 
 		vkMapMemory(m_device, uBuffer.m_boneTransformMemory[i], 0, sizeof(glm::mat4) * transformations.size(), 0, &data);
 
-		memcpy(data, transformCopy.data(), sizeof(glm::mat4) * transformations.size());
+		memcpy(data, transformations.data(), sizeof(glm::mat4) * transformations.size());
 
 		vkUnmapMemory(m_device, uBuffer.m_boneTransformMemory[i]);
 
@@ -1253,9 +1254,23 @@ void Renderer::initializeUniformBuffer(UniformBuffer& uBuffer, const std::vector
 			vkUnmapMemory(m_device, uBuffer.m_lightMemory[i]);
 		}
 	}
+}
 
+void Renderer::initializeLight(UniformBuffer& uBuffer,  Light* light)
+{
+	void* data;
 
+	for (unsigned int i = 0; i < n_buffers; i++)
+	{
+		data = nullptr;
 
+		vkMapMemory(m_device, uBuffer.m_lightMemory[i], 0, sizeof(Light), 0, &data);
+
+		memcpy(data, light, sizeof(Light));
+
+		vkUnmapMemory(m_device, uBuffer.m_lightMemory[i]);
+			
+	}
 }
 
 

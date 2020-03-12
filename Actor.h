@@ -7,33 +7,19 @@
 #include <vector>
 
 #include "ActorComponent.h"
-
-struct LocalFrame
-{
-	glm::vec4 X = { 1,0,0,0 };
-	glm::vec4 Y = { 0,1,0,0 };
-	glm::vec4 Z = { 0,0,1,0 };
-	glm::vec4 O = { 0,0,0,1 };
-
-	glm::mat4 getLocalFrame();
-	//void setLocalFrame();
+#include <mutex>
 
 
-	void translate(glm::vec3 direction, float amount);
-	void rotate(glm::vec3 axis, float degree);
-	void rotate(glm::vec4 axis, float degree);
-	void scale(glm::vec3 scale);
-
-};
 
 
 class SkeletonMesh;
 struct Socket;
+class GameWorld;
 
 class Actor
 {
 public:
-	Actor(glm::mat4 startTransformation);
+	Actor(glm::mat4 startTransformation, GameWorld* world);
 
 	void setSkeletonMesh(SkeletonMesh* mesh);
 
@@ -61,12 +47,38 @@ public:
 
 	~Actor();
 
+	virtual void update() = 0;
+	std::mutex m_localFrameMutex;
 
+	int m_speed = 0;
+
+
+protected:
+	GameWorld* m_world;
+	Socket* m_attchedSocket;
 
 private:
-	SkeletonMesh* m_mesh;
+	struct LocalFrame
+	{
+		glm::vec4 X = { 1,0,0,0 };
+		glm::vec4 Y = { 0,1,0,0 };
+		glm::vec4 Z = { 0,0,1,0 };
+		glm::vec4 O = { 0,0,0,1 };
 
-	Socket* m_attchedSocket;
+		//glm::mat4 getLocalFrame();
+		//void setLocalFrame();
+
+		/*
+		void translate(glm::vec3 direction, float amount);
+		void rotate(glm::vec3 axis, float degree);
+		void rotate(glm::vec4 axis, float degree);
+		void scale(glm::vec3 scale);*/
+
+	};
+
+
+
+	SkeletonMesh* m_mesh;
 
 	std::vector<ActorComponent*> m_components;
 

@@ -2,19 +2,22 @@
 #define SKYBOX_H
 
 #include <string>
-class Renderer;
+class GameWorld;
 struct CubeMap;
 
 #include "Actor.h"
+#include <vector>
 
 class Skybox : public Actor
 {
 public:
-	Skybox(Renderer* renderer, std::string texturePath[6]);
+	Skybox(GameWorld* world, std::string texturePath[6]);
+	virtual void update();
 	~Skybox();
 
 
 private:
+	std::vector<glm::mat4> m_skyboxBoneT;
 };
 
 

@@ -1,9 +1,9 @@
 #include "Terrain.h"
 #include "SkeletonMesh.h"
-#include "Renderer.h"
 #include "Global.h"
 #include "stb_image.h"
-
+#include "GameWorld.h"
+#include "Utils.h"
 
 float getPixelHeight(stbi_uc* image, int numOfPixelPerRow, int z, int x)
 {
@@ -114,8 +114,8 @@ Terrain::Terrain(Renderer* renderer, std::string_view heightMap)
 
 
 
-Terrain::Terrain(Renderer* renderer, std::string_view heightMap)
-	:Actor(glm::mat4(1.0))
+Terrain::Terrain(GameWorld* world, std::string_view heightMap)
+	:Actor(glm::mat4(1.0), world)
 {
 	int height, width, nChannel;
 	stbi_uc* image = stbi_load(heightMap.data(), &height, &width, &nChannel, 4);
@@ -179,11 +179,15 @@ Terrain::Terrain(Renderer* renderer, std::string_view heightMap)
 
 	ShaderPath shaderpath = { "D:\\Inception\\Content\\Shaders\\spv\\vertex.spv","D:\\Inception\\Content\\Shaders\\spv\\fragment.spv" };
 	std::string texturepath = "D:\\Inception\\Content\\Textures\\T_Grass.BMP";
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, shaderpath, texturepath, nullptr, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+	SkeletonMesh* mesh = new SkeletonMesh(m_world->m_renderer.get(), vertices, indices, shaderpath, texturepath, nullptr, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
 	setSkeletonMesh(mesh);
 
 	stbi_image_free(image);
+
+	m_terrainBoneT = std::vector<glm::mat4>(2, glm::mat4(1.0));
+	m_terrainBoneT[1] = getActorTransformation();
+	getSkeletonMesh()->initializeUniformBuffer(m_world->m_renderer.get(), m_terrainBoneT, m_world->m_light.get());
 }
 
 
@@ -207,4 +211,9 @@ float Terrain::getTerrainHeight(glm::vec4 worldPosition)
 	int Z = static_cast<int>(positionInLocal.z / lengthOfTerrainQuad);
 	return m_vertexHeights[X][Z];
 
+}
+
+void Terrain::update()
+{
+	getSkeletonMesh()->updateUniformBuffer(m_world->m_renderer.get(), m_terrainBoneT, m_world->m_light.get());
 }

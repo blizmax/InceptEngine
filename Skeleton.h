@@ -1,5 +1,4 @@
-#ifndef SKELETON_H
-#define SKELETON_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -42,10 +41,13 @@ struct Bone
 
 };
 
-struct Socket : public Bone
+struct Socket
 {
-	Socket();
+	Socket(glm::mat4 coord, std::string name, std::string parent);
 	~Socket();
+	glm::mat4 m_coordInParent;
+	std::string m_socketName;
+	std::string m_parent;
 };
 
 class Skeleton
@@ -53,22 +55,24 @@ class Skeleton
 public:
 	static Skeleton* extractSkeletonFromAnimFile(const aiScene* scene, const std::string& rootBoneName);
 
+	Socket* getSocket(std::string name);
+
+	glm::mat4 getSocketLocation(std::string socketName, const std::vector<glm::mat4>& boneT);
+
 	std::unordered_map<std::string, Bone> m_bones;
 	
 	bool operator == (const Skeleton& other);
 
-	bool addSocket(std::string parent, std::string socketName);
+	bool addSocket(std::string parent, std::string socketName, glm::mat4 transformToParent);
 
 	bool deleteSocket(std::string name);
 
 	void printBones();
+
+
 private:
 	std::unordered_map<std::string, Socket> m_sockets;
+
 };
 
 void traceRootBone(aiNode* curNode, aiNode*& pRootNode, const std::string& rootBoneName);
-
-
-
-
-#endif

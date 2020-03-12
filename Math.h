@@ -1,6 +1,12 @@
 #ifndef MATH_H
 #define MATH_H
 
+//#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+//#define GLM_FORCE_SIMD_AVX2
+
+#define GLM_FORCE_SIMD_AVX2
+
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORECE_DEPTH_ZERO_TO_ONE
 

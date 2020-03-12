@@ -1,6 +1,6 @@
 #include "Animation.h"
 #include "Global.h"
-Animation* loadAnimation(const std::string& filepath, SkeletonMesh* mesh, std::string rootBoneName)
+Animation* Animation::loadAnimation(const std::string& filepath, SkeletonMesh* mesh, std::string rootBoneName)
 {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filepath,
@@ -109,23 +109,13 @@ glm::mat4 interpolateTransform(const BoneTransformTimeline& timeline, float t)
 	return translation * rotation * scale;
 }
 
-std::vector<glm::mat4> getBonesTransformation(const Skeleton& skeleton, const Animation& anim, float t)
+void Animation::setBonesTransformation(const Skeleton& skeleton, const Animation& anim, std::vector<glm::mat4>* boneT, float t)
 {
 	std::unordered_map<std::string, glm::mat4> boneTransformations;
 
 	for (const auto& boneTimelinePair : anim.m_animation)
 	{
 		boneTransformations.insert(std::pair(boneTimelinePair.first, interpolateTransform(boneTimelinePair.second, t)));
-	}
-
-
-	std::vector<glm::mat4> boneTransAfterProp;
-	boneTransAfterProp.resize(skeleton.m_bones.size() + 2);
-	boneTransAfterProp[0] = glm::mat4(1.0);
-
-	for (auto& bone : boneTransAfterProp)
-	{
-		bone = glm::mat4(1.0);
 	}
 
 	for (const auto& bone : boneTransformations)
@@ -143,11 +133,8 @@ std::vector<glm::mat4> getBonesTransformation(const Skeleton& skeleton, const An
 			currentBone = &skeleton.m_bones.at(currentBone->m_parent);
 		}
 
-		boneTransAfterProp[boneID] = anim.m_rootTransform * finalTrans;
+		(*boneT)[boneID] = anim.m_rootTransform * finalTrans;
 	}
-
-
-	return boneTransAfterProp;
 }
 
 void cleanAnimation(Animation* anim, std::string rootName)

@@ -16,6 +16,7 @@ public:
 	void rotateVertical(float degree);
 	void printCameraPramameter();
 	void lightUp(float amount);
+	glm::vec3 getForwardVec();
 
 private:
 

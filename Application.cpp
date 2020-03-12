@@ -1,26 +1,7 @@
 
-#include "Animation.h"
-#include "Renderer.h"
-#include "WindowEventCallback.h"
-#include "Player.h"
-#include "Camera.h"
-#include "PrimitiveActors.h"
-
-#include <fstream>
-#include <iostream>
-#include "Global.h"
-#include "Light.h"
-#include "MarchingCube.h"
-
-#include "FastNoise.h"
-
-#include "Skybox.h"
-
-#include <windows.h>
-#include <iostream>
-#pragma comment(lib, "winmm.lib")
 
 
+/*
 
 glm::mat4 computeBoneMatrix(glm::vec3 position, glm::vec3 pointDirection)
 {
@@ -101,7 +82,7 @@ void IkSetBoneWorldTransformationToBoneT(glm::mat4 world, std::vector<glm::mat4>
 glm::mat4 getBoneWorldTransformationFromBoneT(const std::vector<glm::mat4>& boneT, const Skeleton& skeleton, std::string boneName)
 {
 	return boneT[skeleton.m_bones.at(boneName).m_boneId] * skeleton.m_bones.at(boneName).m_bindPoseWorldTransform;
-}
+}*/
 
 /*
 int main()
@@ -306,7 +287,7 @@ int main()
 	delete renderer;
 	
 }*/
-
+/*
 float testInOrOutSphere(glm::vec4 position)
 {
 	const float r = 10.0f;
@@ -391,7 +372,7 @@ Actor* createrRandomTerrain(Renderer* renderer, ShaderPath shaderpath, std::stri
 	terrain->setSkeletonMesh(mesh);
 	return terrain;
 }
-
+*/
 /*
 //shaders  "D:\\Inception\\Content\\Shaders\\spv\\vertex.spv"   "D:\\Inception\\Content\\Shaders\\spv\\fragment.spv"
 int main()
@@ -543,7 +524,7 @@ int main()
 	
 }*/
 
-
+/*
 void playAudio()
 {
 	mciSendString(L"play D:\\Inception\\Content\\Sounds\\test.mp3 wait", NULL, 0, NULL);
@@ -575,7 +556,31 @@ void animationExport(const Skeleton& sk, const Animation& anim)
 	myfile.close();
 
 	std::cout << "Export finish" << std::endl;
-}
+}*/
+
+
+
+/*
+#include "Animation.h"
+#include "Renderer.h"
+#include "WindowEventCallback.h"
+#include "Player.h"
+#include "Camera.h"
+#include "PrimitiveActors.h"
+
+#include <fstream>
+#include <iostream>
+#include "Global.h"
+#include "Light.h"
+#include "MarchingCube.h"
+
+#include "FastNoise.h"
+
+#include "Skybox.h"
+
+#include <windows.h>
+#include <iostream>
+#pragma comment(lib, "winmm.lib")
 
 #include "Terrain.h"
 #include <string_view>
@@ -678,7 +683,7 @@ int main()
 	Camera followingCam = Camera(hornet, glm::vec4(0, 119.745132f, 475.598633f, 1.0f), glm::vec4(0, 128.575134f, 76.504005f, 1.0f));
 
 	bool enableCameraMove = false;
-	Data data = { renderer, &followingCam, &enableCameraMove, hornet, nullptr, nullptr, playAudio };
+	Data data = { renderer, &followingCam, &enableCameraMove, hornet, nullptr, nullptr, nullptr };
 
 	glfwSetWindowUserPointer(*m_window, &data);
 
@@ -774,8 +779,15 @@ int main()
 	
 	delete renderer;
 
-}
+}*/
 
+#include "GameWorld.h"
+
+int main()
+{
+	GameWorld world;
+	world.play();
+}
 
 
 

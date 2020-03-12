@@ -1,10 +1,10 @@
 #include "Skybox.h"
-#include "Renderer.h"
-
+#include "GameWorld.h"
 #include "SkeletonMesh.h"
+#include "Utils.h"
 
-Skybox::Skybox(Renderer* renderer, std::string texturePath[6])
-	:Actor(glm::mat4(1.0))
+Skybox::Skybox(GameWorld* world, std::string texturePath[6])
+	:Actor(glm::mat4(1.0), world)
 {
 	const glm::vec4 vertexPositions[8] =
 	{
@@ -19,7 +19,8 @@ Skybox::Skybox(Renderer* renderer, std::string texturePath[6])
 	};
 
 	std::vector<Vertex> vertices;
-	
+	vertices.reserve(8);
+
 	for (int i = 0; i < 8; i++)
 	{
 		Vertex v;
@@ -36,8 +37,16 @@ Skybox::Skybox(Renderer* renderer, std::string texturePath[6])
 		"D:\\Inception\\Content\\Shaders\\spv\\skyboxFrag.spv"
 	};
 
-	SkeletonMesh* mesh = new SkeletonMesh(renderer, vertices, indices, path, texturePath, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+	SkeletonMesh* mesh = new SkeletonMesh(m_world->m_renderer.get(), vertices, indices, path, texturePath, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 	setSkeletonMesh(mesh);
+
+	m_skyboxBoneT = std::vector<glm::mat4>(2, glm::mat4(1.0));
+	getSkeletonMesh()->updateUniformBuffer(m_world->m_renderer.get(), m_skyboxBoneT, m_world->m_light.get());
+}
+
+void Skybox::update()
+{
+	getSkeletonMesh()->updateUniformBuffer(m_world->m_renderer.get(), m_skyboxBoneT, m_world->m_light.get());
 }
 
 Skybox::~Skybox()

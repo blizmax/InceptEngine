@@ -17,7 +17,7 @@
 
 #include "Math.h"
 #include "Vertex.h"
-
+#include "Utils.h"
 
 
 #define GRAPHICS_QUEUE "graphicsQueue"
@@ -80,11 +80,6 @@ struct IndexBuffer
 	VkDeviceMemory m_indexBufferMemory;
 };
 
-struct ShaderPath
-{
-	std::string vertexShaderPath;
-	std::string fragmentShaderPath;
-};
 
 struct Pipeline
 {
@@ -209,6 +204,8 @@ public:
 
 	void initializeUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm::mat4>& transformations, Light* light);
 
+	void initializeLight(UniformBuffer& uBuffer, Light* light);
+
 	void updateUniformBuffer(UniformBuffer& uBuffer, const std::vector<glm::mat4>& transformations, Light* light);
 
 	void init();
@@ -320,7 +317,7 @@ private:
 
 	Terrain* m_terrain = nullptr;
 
-	uint32_t m_currentRenderingImgIdx = 0;
+	uint32_t m_nextRenderImgIdx = 0;
 
 	uint32_t m_windowWidth;
 	uint32_t m_windowHeight;

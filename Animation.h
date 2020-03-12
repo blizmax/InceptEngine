@@ -69,6 +69,9 @@ class Animation
 public:
 	Animation();
 
+	std::chrono::time_point<std::chrono::steady_clock> m_animationStartTime;
+	std::chrono::time_point<std::chrono::steady_clock> m_animationCurrentTime;
+
 	float m_tickPerSecond = 0;
 
 	float m_duration = 0;
@@ -76,18 +79,18 @@ public:
 	glm::mat4 m_rootTransform;
 
 	std::unordered_map<std::string, BoneTransformTimeline> m_animation;
+
+	static Animation* loadAnimation(const std::string& filepath, SkeletonMesh* mesh, std::string rootBoneName);
+
+	static void setBonesTransformation(const Skeleton& skeleton, const Animation& anim, std::vector<glm::mat4>* boneT, float t);
+
+	bool m_rootMotion = false;
 };
-
-
-
-Animation* loadAnimation(const std::string& filepath, SkeletonMesh* mesh, std::string rootBoneName);
-
-
 
 //assume the three timeline are sync
 glm::mat4 interpolateTransform(const BoneTransformTimeline& timeline, float t);
 
-std::vector<glm::mat4> getBonesTransformation(const Skeleton& skeleton, const Animation& anim, float t);
+
 
 //solve the root bone problem
 void cleanAnimation(Animation* anim, std::string rootName);
