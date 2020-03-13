@@ -1,5 +1,5 @@
 # Inception Engine
-An independent work attemping to implement some components of a game engine from scratch. A demo can be found at https://www.youtube.com/watch?v=-Sv7Ze8hods&t=5s
+An independent work attemping to implement some components of a game engine from scratch. A demo can be found at https://www.bilibili.com/video/av95683434/
 
 **Enabled Features (from new to old):**
 
