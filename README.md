@@ -51,8 +51,11 @@ An independent work attempting to implement some components of a game engine fro
   * Multitexturing
   
   * Simple ray tracer
+
+  * UMG support
   
-  **Reference:**
+  
+**Reference:**
   
   * Vulkan: for rendering
   
